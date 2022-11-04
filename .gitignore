@@ -1,0 +1,6 @@
+target/
+benchmarks/*.sqlite
+benchmarks/*.duckdb
+benchmarks/*.dylib
+benchmarks/regexp.c
+*.db
