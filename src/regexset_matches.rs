@@ -1,3 +1,4 @@
+use regex::RegexSet;
 use sqlite_loadable::prelude::*;
 use sqlite_loadable::{
     api,
@@ -5,42 +6,42 @@ use sqlite_loadable::{
     BestIndexError, Result,
 };
 
-use std::{marker::PhantomData, mem, os::raw::c_int};
+use std::{mem, os::raw::c_int};
 
-use crate::utils::value_regex;
+use crate::utils::value_regexset;
 
-static CREATE_SQL: &str = "CREATE TABLE x(item text, pattern hidden, contents text hidden)";
+static CREATE_SQL: &str = "CREATE TABLE x(x, regexset hidden, contents hidden)";
 enum Columns {
-    Item,
-    Pattern,
+    X,
+    Regexset,
     Contents,
 }
 fn column(index: i32) -> Option<Columns> {
     match index {
-        0 => Some(Columns::Item),
-        1 => Some(Columns::Pattern),
+        0 => Some(Columns::X),
+        1 => Some(Columns::Regexset),
         2 => Some(Columns::Contents),
         _ => None,
     }
 }
 
 #[repr(C)]
-pub struct RegexSplitTable {
+pub struct RegexSetMatchesTable {
     /// must be first
     base: sqlite3_vtab,
 }
 
-impl<'vtab> VTab<'vtab> for RegexSplitTable {
+impl<'vtab> VTab<'vtab> for RegexSetMatchesTable {
     type Aux = ();
-    type Cursor = RegexSplitCursor<'vtab>;
+    type Cursor = RegexSetMatchesCursor;
 
     fn connect(
         _db: *mut sqlite3,
-        _aux: Option<&()>,
+        _aux: Option<&Self::Aux>,
         _args: VTabArguments,
-    ) -> Result<(String, RegexSplitTable)> {
+    ) -> Result<(String, RegexSetMatchesTable)> {
         let base: sqlite3_vtab = unsafe { mem::zeroed() };
-        let vtab = RegexSplitTable { base };
+        let vtab = RegexSetMatchesTable { base };
         // TODO db.config(VTabConfig::Innocuous)?;
         Ok((CREATE_SQL.to_owned(), vtab))
     }
@@ -53,7 +54,7 @@ impl<'vtab> VTab<'vtab> for RegexSplitTable {
         let mut has_contents = false;
         for mut constraint in info.constraints() {
             match column(constraint.column_idx()) {
-                Some(Columns::Pattern) => {
+                Some(Columns::Regexset) => {
                     if constraint.usable() && constraint.op() == Some(ConstraintOperator::EQ) {
                         constraint.set_omit(true);
                         constraint.set_argv_index(1);
@@ -84,44 +85,43 @@ impl<'vtab> VTab<'vtab> for RegexSplitTable {
         Ok(())
     }
 
-    fn open(&mut self) -> Result<RegexSplitCursor<'_>> {
-        Ok(RegexSplitCursor::new())
+    fn open(&mut self) -> Result<RegexSetMatchesCursor> {
+        Ok(RegexSetMatchesCursor::new())
     }
 }
 
 #[repr(C)]
-pub struct RegexSplitCursor<'vtab> {
+pub struct RegexSetMatchesCursor {
     /// Base class. Must be first
     base: sqlite3_vtab_cursor,
-    split: Option<Vec<String>>,
+    regex_set: Option<RegexSet>,
+    matches: Option<Vec<usize>>,
     rowid: usize,
-    phantom: PhantomData<&'vtab RegexSplitTable>,
 }
-impl RegexSplitCursor<'_> {
-    fn new<'vtab>() -> RegexSplitCursor<'vtab> {
+impl RegexSetMatchesCursor {
+    fn new() -> RegexSetMatchesCursor {
         let base: sqlite3_vtab_cursor = unsafe { mem::zeroed() };
-        RegexSplitCursor {
+        RegexSetMatchesCursor {
             base,
-            split: None,
+            regex_set: None,
+            matches: None,
             rowid: 0,
-            phantom: PhantomData,
         }
     }
 }
 
-impl VTabCursor for RegexSplitCursor<'_> {
+impl VTabCursor for RegexSetMatchesCursor {
     fn filter(
         &mut self,
         _idx_num: c_int,
         _idx_str: Option<&str>,
         values: &[*mut sqlite3_value],
     ) -> Result<()> {
-        let r = value_regex(values.get(0).unwrap())?;
+        let r = value_regexset(values.get(0).unwrap())?;
         let contents = api::value_text(values.get(1).unwrap())?;
-
-        let split = r.split(contents);
-        self.split = Some(split.map(|i| i.to_string()).collect());
-        self.rowid = 0;
+        self.regex_set = Some((*r).clone());
+        self.matches = Some(r.matches(contents).into_iter().collect());
+        Box::into_raw(r);
         Ok(())
     }
 
@@ -131,26 +131,28 @@ impl VTabCursor for RegexSplitCursor<'_> {
     }
 
     fn eof(&self) -> bool {
-        self.rowid >= self.split.as_ref().unwrap().len()
+        self.rowid >= self.matches.as_ref().unwrap().len()
     }
 
     fn column(&self, context: *mut sqlite3_context, i: c_int) -> Result<()> {
+        let m = self.matches.as_ref().unwrap().get(self.rowid).unwrap();
+
         match column(i) {
-            Some(Columns::Item) => {
-                api::result_text(
-                    context,
-                    self.split.as_ref().unwrap().get(self.rowid).unwrap(),
-                )?;
+            Some(Columns::X) => {
+                //api::result_int(context, (*m).try_into().unwrap());
+                let r = self.regex_set.as_ref().unwrap().patterns().get(*m).unwrap();
+                api::result_text(context, r)?;
             }
-            Some(Columns::Contents) => {
-              todo!()
+            Some(Columns::Regexset) => {
+                api::result_json(context, self.regex_set.as_ref().unwrap().patterns().into())?;
             }
+            Some(Columns::Contents) => {}
             _ => (),
         }
         Ok(())
     }
 
     fn rowid(&self) -> Result<i64> {
-        Ok(self.rowid.try_into().unwrap())
+        Ok(self.rowid as i64)
     }
 }

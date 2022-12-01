@@ -337,28 +337,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
-name = "sqlite-regex"
-version = "0.1.0"
+name = "sqlite-loadable"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b4a6ba861c2574a7ca409f0c948e9e22257d1ec47659e9eb806dad8332b2559"
 dependencies = [
- "regex",
- "sqlite3-loadable",
- "sqlite3ext-sys",
-]
-
-[[package]]
-name = "sqlite3-loadable"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
+ "bitflags",
  "serde",
  "serde_json",
- "sqlite3-loadable-macros",
+ "sqlite-loadable-macros",
  "sqlite3ext-sys",
 ]
 
 [[package]]
-name = "sqlite3-loadable-macros"
-version = "0.1.0"
+name = "sqlite-loadable-macros"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f98bc75a8d6fd24f6a2cfea34f28758780fa17279d3051eec926efa381971e48"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -366,8 +361,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "sqlite3ext-sys"
+name = "sqlite-regex"
 version = "0.1.0"
+dependencies = [
+ "regex",
+ "sqlite-loadable",
+]
+
+[[package]]
+name = "sqlite3ext-sys"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3afdc2b3dc08f16d6eecf8aa07d19975a268603ab1cca67d3f9b4172c507cf16"
 dependencies = [
  "bindgen",
  "cc",

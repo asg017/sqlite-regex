@@ -1,3 +1,0 @@
-
-[env]
-LIBSQLITE3_FLAGS = { value = "-" }

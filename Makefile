@@ -1,2 +1,2 @@
 test:
-	sqlite3x :memory: '.read test.sql'
+	python3 tests/test-loadable.py

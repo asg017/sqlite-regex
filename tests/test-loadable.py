@@ -32,18 +32,27 @@ def execute_all(sql, args=None):
   return list(map(lambda x: dict(x), results))
 
 FUNCTIONS = [
+  "regex",
   "regex_debug",
   "regex_find",
+  "regex_print",
   "regex_replace",
   "regex_valid",
   "regex_version",
   "regexp",
+  "regexset",
+  "regexset_is_match",
+  "regexset_print",
 ]
 
 MODULES = [
   "regex_find_all",
   "regex_split",
+  "regexset_matches",
 ]
+def spread_args(args):                                                          
+  return ",".join(['?'] * len(args))
+
 class TestRegex(unittest.TestCase):
   def test_funcs(self):
     funcs = list(map(lambda a: a[0], db.execute("select name from loaded_functions").fetchall()))
@@ -60,6 +69,40 @@ class TestRegex(unittest.TestCase):
   def test_regex_debug(self):
     debug = db.execute("select regex_debug()").fetchone()[0]
     self.assertEqual(len(debug.splitlines()), 2)
+  
+  def test_regex(self):
+    regex = lambda pattern: db.execute("select regex(?)", [pattern]).fetchone()[0]
+    self.assertEqual(regex('^\d{4}-\d{2}-\d{2}$'), None)
+  
+  def test_regex_print(self):
+    regex_print = lambda pattern: db.execute("select regex_print(regex(?))", [pattern]).fetchone()[0]
+    self.assertEqual(regex_print('^\d{4}-\d{2}-\d{2}$'), '^\d{4}-\d{2}-\d{2}$')
+  
+  def test_regexset(self):
+    regexset = lambda *patterns: db.execute("select regexset({args})".format(args=spread_args(patterns)), patterns).fetchone()[0]
+    self.assertEqual(regexset('a'), None)
+    self.assertEqual(regexset('a', 'b'), None)
+  
+  def test_regexset_print(self):
+    regexset_print = lambda *patterns: db.execute("select regexset_print(regexset({args}))".format(args=spread_args(patterns)), patterns).fetchone()[0]
+    self.assertEqual(regexset_print('a', 'b', 'c'), '["a","b","c"]')
+  
+  def test_regexset_is_match(self):
+    regexset_is_match = lambda *patterns, text: db.execute("select regexset_is_match(regexset({args}), ?)".format(args=spread_args(patterns)), [*patterns, text]).fetchone()[0]
+    self.assertEqual(regexset_is_match('a', text='bbb'), 0)
+    self.assertEqual(regexset_is_match('a', 'b', text='ccc'), 0)
+    self.assertEqual(regexset_is_match('a', 'b', text='ccca'), 1)
+    self.assertEqual(regexset_is_match('a', 'b', text='cccb'), 1)
+  
+  def test_regexset_matches(self):
+    regexset_matches = lambda *patterns, text: execute_all("select rowid, * from regexset_matches(regexset({args}), ?)".format(args=spread_args(patterns)), [*patterns, text])
+    self.assertEqual(
+      regexset_matches('x', 'y', 'z', 'a', 'b', text='cab'),
+      [
+        {'rowid': 0, 'x': 'a'}, 
+        {'rowid': 1, 'x': 'b'}
+      ]
+    )
   
   def test_regexp(self):
     regexp = lambda pattern, content: db.execute("select regexp(?, ?)", [pattern, content]).fetchone()[0]
@@ -124,6 +167,8 @@ class TestRegex(unittest.TestCase):
         {'rowid': 3, 'start': 45, 'end': 58, 'match': 'reprehensible',}
       ]
     )
+    
+    
   
   def test_regex_split(self):
     regex_split = lambda pattern, content: execute_all("select rowid, * from regex_split(?, ?)", [pattern, content])

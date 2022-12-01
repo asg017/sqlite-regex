@@ -1,43 +1,42 @@
-mod meta;
-mod regexp;
 mod find_all;
+mod meta;
+mod regex;
+mod regexset;
+mod regexset_matches;
 mod split;
+mod utils;
 
-use std::{collections::HashMap, cell::RefCell, rc::Rc};
-
-use regex::Regex;
-use sqlite3_loadable::{
-    errors::Result, scalar::define_scalar_function, sqlite3_entrypoint, sqlite3_imports,
-    table::define_table_function,
-};
-use sqlite3ext_sys::sqlite3;
-
-use crate::{
-    find_all::RegexFindAllTable,
-    meta::{regex_debug, regex_version},
-    regexp::{regex_find, regex_find_at, regex_replace, regex_replace_all, regex_valid, regexp},
-    split::{RegexSplitTable},
+use regexset_matches::RegexSetMatchesTable;
+use sqlite_loadable::prelude::*;
+use sqlite_loadable::{
+    define_scalar_function, define_table_function, errors::Result, FunctionFlags,
 };
 
-sqlite3_imports!();
+use crate::{find_all::RegexFindAllTable, meta::*, regex::*, regexset::*, split::RegexSplitTable};
 
-#[sqlite3_entrypoint]
+#[sqlite_entrypoint]
 pub fn sqlite3_regex_init(db: *mut sqlite3) -> Result<()> {
-  let cache: HashMap<String, Box<Regex>> = HashMap::new();
-  let c = Rc::new(RefCell::new(cache));
+    let flags = FunctionFlags::UTF8 | FunctionFlags::DETERMINISTIC;
+    define_scalar_function(db, "regex_version", 0, regex_version, flags)?;
+    define_scalar_function(db, "regex_debug", 0, regex_debug, flags)?;
 
-    define_scalar_function(db, "regex_version", 0, regex_version)?;
-    define_scalar_function(db, "regex_debug", 0, regex_debug)?;
+    define_scalar_function(db, "regex", 1, regex, flags)?;
+    define_scalar_function(db, "regex_print", 1, regex_print, flags)?;
 
-    define_scalar_function(db, "regexp", 2, regexp)?;
+    define_scalar_function(db, "regexp", 2, regexp, flags)?;
 
-    define_scalar_function(db, "regex_valid", 1, regex_valid)?;
-    define_scalar_function(db, "regex_find", 2, regex_find)?;
+    define_scalar_function(db, "regex_valid", 1, regex_valid, flags)?;
+    define_scalar_function(db, "regex_find", 2, regex_find, flags)?;
     //define_scalar_function(db, "regex_find_at", 3, regex_find_at)?;
-    define_scalar_function(db, "regex_replace", 3, regex_replace)?;
+    define_scalar_function(db, "regex_replace", 3, regex_replace, flags)?;
     //define_scalar_function(db, "regex_replace_all", 3, regex_replace_all)?;
 
-    define_table_function::<RegexFindAllTable>(db, "regex_find_all", Some(Rc::clone(&c)))?;
+    define_table_function::<RegexFindAllTable>(db, "regex_find_all", None)?;
     define_table_function::<RegexSplitTable>(db, "regex_split", None)?;
+
+    define_scalar_function(db, "regexset", -1, regexset, flags)?;
+    define_scalar_function(db, "regexset_print", 1, regexset_print, flags)?;
+    define_scalar_function(db, "regexset_is_match", 2, regexset_is_match, flags)?;
+    define_table_function::<RegexSetMatchesTable>(db, "regexset_matches", None)?;
     Ok(())
 }
