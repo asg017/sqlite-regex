@@ -6,8 +6,6 @@ As a reminder, sqlite-regex follows semver and is pre v1, so breaking changes ar
 
 ## API Reference
 
-Returns the semver version string of the current version of sqlite-regex.
-
 <h3 name="regexp"><code>regexp()</code></h3>
 
 ```sql
@@ -35,6 +33,7 @@ https://www.sqlite.org/bindptr.html
 
 ```sql
 select regex("[abc]"); -- NULL
+select regex("[abc"); -- Errors with ''
 select regex_print(regex())
 --
 ```
@@ -117,10 +116,26 @@ select regexset_is_match();
 https://docs.rs/regex/latest/regex/struct.RegexSet.html#method.matches
 
 ```sql
-select * from regexset_matches();
+select
+  key,
+  pattern
+from regexset_matches(
+  regexset(
+    '\w+',
+    '\d+',
+    '\pL+',
+    'foo',
+    'bar',
+    'barfoo',
+    'foobar'
+  ),
+  'foobar'
+);
 ```
 
 <h3 name="regex_version"><code>regex_version()</code></h3>
+
+Returns the semver version string of the current version of sqlite-regex.
 
 ```sql
 select regex_version();

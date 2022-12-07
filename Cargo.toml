@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sqlite-loadable = "0.0.1"
+sqlite-loadable = {path="../sqlite-loadable-rs"}
+#sqlite-loadable = "0.0.1"
 regex = "1"
 
 [lib]
-crate-type=["rlib", "cdylib"]
-name = "regex0"
+crate-type=["rlib", "cdylib", "staticlib"]

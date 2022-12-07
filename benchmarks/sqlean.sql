@@ -1,4 +1,4 @@
-.load ./benchmarks/re
+.load ./re
 
 select 
   sum(

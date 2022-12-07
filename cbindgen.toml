@@ -1,0 +1,5 @@
+language = "C"
+includes = ["sqlite3ext.h"]
+
+[parse.expand]
+crates = ["sqlite-regex"]

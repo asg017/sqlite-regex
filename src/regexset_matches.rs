@@ -10,17 +10,19 @@ use std::{mem, os::raw::c_int};
 
 use crate::utils::value_regexset;
 
-static CREATE_SQL: &str = "CREATE TABLE x(x, regexset hidden, contents hidden)";
+static CREATE_SQL: &str = "CREATE TABLE x(key, pattern, regexset hidden, contents hidden)";
 enum Columns {
-    X,
+    Key,
+    RegexPattern,
     Regexset,
     Contents,
 }
 fn column(index: i32) -> Option<Columns> {
     match index {
-        0 => Some(Columns::X),
-        1 => Some(Columns::Regexset),
-        2 => Some(Columns::Contents),
+        0 => Some(Columns::Key),
+        1 => Some(Columns::RegexPattern),
+        2 => Some(Columns::Regexset),
+        3 => Some(Columns::Contents),
         _ => None,
     }
 }
@@ -40,8 +42,9 @@ impl<'vtab> VTab<'vtab> for RegexSetMatchesTable {
         _aux: Option<&Self::Aux>,
         _args: VTabArguments,
     ) -> Result<(String, RegexSetMatchesTable)> {
-        let base: sqlite3_vtab = unsafe { mem::zeroed() };
-        let vtab = RegexSetMatchesTable { base };
+        let vtab = RegexSetMatchesTable {
+            base: unsafe { mem::zeroed() },
+        };
         // TODO db.config(VTabConfig::Innocuous)?;
         Ok((CREATE_SQL.to_owned(), vtab))
     }
@@ -72,7 +75,7 @@ impl<'vtab> VTab<'vtab> for RegexSetMatchesTable {
                         return Err(BestIndexError::Constraint);
                     }
                 }
-                _ => todo!(),
+                _ => (),
             }
         }
         if !has_pattern || !has_contents {
@@ -118,9 +121,10 @@ impl VTabCursor for RegexSetMatchesCursor {
         values: &[*mut sqlite3_value],
     ) -> Result<()> {
         let r = value_regexset(values.get(0).unwrap())?;
-        let contents = api::value_text(values.get(1).unwrap())?;
+        let contents = api::value_text_notnull(values.get(1).unwrap())?;
         self.regex_set = Some((*r).clone());
         self.matches = Some(r.matches(contents).into_iter().collect());
+        self.rowid = 0;
         Box::into_raw(r);
         Ok(())
     }
@@ -131,23 +135,34 @@ impl VTabCursor for RegexSetMatchesCursor {
     }
 
     fn eof(&self) -> bool {
-        self.rowid >= self.matches.as_ref().unwrap().len()
+        self.matches
+            .as_ref()
+            .map_or(true, |m| self.rowid >= m.len())
     }
 
     fn column(&self, context: *mut sqlite3_context, i: c_int) -> Result<()> {
-        let m = self.matches.as_ref().unwrap().get(self.rowid).unwrap();
+        let match_idx = self.matches.as_ref().unwrap().get(self.rowid).unwrap();
 
         match column(i) {
-            Some(Columns::X) => {
+            Some(Columns::Key) => {
+                api::result_int(context, (*match_idx).try_into().unwrap());
+            }
+            Some(Columns::RegexPattern) => {
                 //api::result_int(context, (*m).try_into().unwrap());
-                let r = self.regex_set.as_ref().unwrap().patterns().get(*m).unwrap();
-                api::result_text(context, r)?;
+                let pattern = self
+                    .regex_set
+                    .as_ref()
+                    .unwrap()
+                    .patterns()
+                    .get(*match_idx)
+                    .unwrap();
+                api::result_text(context, pattern)?;
             }
             Some(Columns::Regexset) => {
                 api::result_json(context, self.regex_set.as_ref().unwrap().patterns().into())?;
             }
             Some(Columns::Contents) => {}
-            _ => (),
+            None => (),
         }
         Ok(())
     }

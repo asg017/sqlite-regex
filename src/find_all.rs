@@ -1,9 +1,9 @@
-use sqlite_loadable::prelude::*;
 use sqlite_loadable::{
     api,
     table::{ConstraintOperator, IndexInfo, VTab, VTabArguments, VTabCursor},
     BestIndexError, Result,
 };
+use sqlite_loadable::{prelude::*, Error};
 
 use std::{marker::PhantomData, mem, os::raw::c_int};
 
@@ -122,8 +122,16 @@ impl VTabCursor for RegexFindAllCursor<'_> {
         _idx_str: Option<&str>,
         values: &[*mut sqlite3_value],
     ) -> Result<()> {
-        let r = value_regex(values.get(0).unwrap())?;
-        let contents = api::value_text(values.get(1).unwrap())?;
+        let r = value_regex(
+            values
+                .get(0)
+                .ok_or_else(|| Error::new_message("expected 1st argument as regex"))?,
+        )?;
+        let contents = api::value_text_notnull(
+            values
+                .get(1)
+                .ok_or_else(|| Error::new_message("expected 2nd argument as contents"))?,
+        )?;
 
         let mut res = vec![];
         for m in r.find_iter(contents) {
@@ -139,7 +147,7 @@ impl VTabCursor for RegexFindAllCursor<'_> {
     }
 
     fn eof(&self) -> bool {
-        self.curr >= self.matches.as_ref().unwrap().len()
+        self.matches.as_ref().map_or(true, |m| self.curr >= m.len())
     }
 
     fn column(&self, context: *mut sqlite3_context, i: c_int) -> Result<()> {

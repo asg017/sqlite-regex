@@ -117,7 +117,7 @@ impl VTabCursor for RegexSplitCursor<'_> {
         values: &[*mut sqlite3_value],
     ) -> Result<()> {
         let r = value_regex(values.get(0).unwrap())?;
-        let contents = api::value_text(values.get(1).unwrap())?;
+        let contents = api::value_text_notnull(values.get(1).unwrap())?;
 
         let split = r.split(contents);
         self.split = Some(split.map(|i| i.to_string()).collect());
@@ -131,7 +131,7 @@ impl VTabCursor for RegexSplitCursor<'_> {
     }
 
     fn eof(&self) -> bool {
-        self.rowid >= self.split.as_ref().unwrap().len()
+        self.split.as_ref().map_or(true, |m| self.rowid >= m.len())
     }
 
     fn column(&self, context: *mut sqlite3_context, i: c_int) -> Result<()> {
@@ -143,7 +143,7 @@ impl VTabCursor for RegexSplitCursor<'_> {
                 )?;
             }
             Some(Columns::Contents) => {
-              todo!()
+                todo!()
             }
             _ => (),
         }

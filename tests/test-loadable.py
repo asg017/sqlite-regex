@@ -3,7 +3,7 @@ import unittest
 import time
 import os
 
-EXT_PATH="./target/debug/libregex0"
+EXT_PATH="./dist/debug/regex0"
 
 def connect(ext):
   db = sqlite3.connect(":memory:")
@@ -35,8 +35,10 @@ FUNCTIONS = [
   "regex",
   "regex_debug",
   "regex_find",
+  "regex_find_at",
   "regex_print",
   "regex_replace",
+  "regex_replace_all",
   "regex_valid",
   "regex_version",
   "regexp",
@@ -99,8 +101,8 @@ class TestRegex(unittest.TestCase):
     self.assertEqual(
       regexset_matches('x', 'y', 'z', 'a', 'b', text='cab'),
       [
-        {'rowid': 0, 'x': 'a'}, 
-        {'rowid': 1, 'x': 'b'}
+        {'rowid': 0, 'key': 3, 'pattern': 'a'}, 
+        {'rowid': 1, 'key': 4, 'pattern': 'b'}
       ]
     )
   
@@ -133,6 +135,16 @@ class TestRegex(unittest.TestCase):
     with self.assertRaisesRegex(sqlite3.OperationalError, "pattern not valid regex"):
       regex_find("[invalidregex", "abc")
     
+  
+  def test_regex_find_at(self):
+    regex_find_at = lambda pattern, content, offset: db.execute("select regex_find_at(?, ?, ?)", [pattern, content, offset]).fetchone()[0]
+    self.assertEqual(
+      regex_find_at("[0-9]{3}-[0-9]{3}-[0-9]{4}", "phone: 111-222-3333", 0),
+      '111-222-3333'
+    )
+    with self.assertRaisesRegex(sqlite3.OperationalError, "pattern not valid regex"):
+      regex_find_at("[invalidregex", "abc", 0)
+    
   def test_regex_replace(self):
     regex_replace = lambda pattern, content, replacement: db.execute("select regex_replace(?, ?, ?)", [pattern, content, replacement]).fetchone()[0]
     
@@ -153,8 +165,21 @@ class TestRegex(unittest.TestCase):
       ),
       'deep_fried'
     )
+    self.assertEqual(
+      regex_replace('a', 'abc abc', ''),
+      'bc abc'
+    )
+    
     #with self.assertRaisesRegex(sqlite3.OperationalError, "pattern not valid regex"):
     #  regex_find("[invalidregex", "abc")
+
+  def test_regex_replace_all(self):
+    regex_replace_all = lambda pattern, content, replacement: db.execute("select regex_replace_all(?, ?, ?)", [pattern, content, replacement]).fetchone()[0]
+    
+    self.assertEqual(
+      regex_replace_all('a', 'abc abc', ''),
+      'bc bc'
+    )
 
   def test_regex_find_all(self):
     regex_find_all = lambda pattern, content: execute_all("select rowid, * from regex_find_all(?, ?)", [pattern, content])

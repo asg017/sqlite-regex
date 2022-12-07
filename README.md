@@ -1,34 +1,71 @@
-.load ../sqlite-lines/dist/lines0
-create table words as select line as word from lines_read('/usr/share/dict/words');
+# sqlite-regex
 
-gcc regexp.c -fPIC -shared -o regexp.dylib -I /Users/alex/projects/sqlite-lines/sqlite
+A fast and performant SQLite extension for regular expressions.
 
-## TODO
+See [`sqlite-loadable-rs`](https://github.com/asg017/sqlite-loadable-rs), the framework that makes this extension possible.
 
-- [ ] `regex_valid(pattern)`
-- [ ] `regex_find(pattern, content)`
+## WORK IN PROGRESS
 
-- [ ] `regex_replace(pattern, content)`
-- [ ] `regex_replace_all(pattern, content)`
-- [ ] `regex_replace_n(pattern, content, n)`
+This extension isn't 100% complete yet, but hoping to release in the next 1-2 weeks! A sneak peek at what to expect:
 
-- [ ] `regex_shortest_match(pattern, content)`
-- [ ] `regex_shortest_match_at(pattern, content, after)`
-- [ ] `regex_shortest_is_match_at(pattern, content, offset)`
+### The fastest `REGEXP()` implementation in SQLite
 
-- [ ] `select * from regex_captures(pattern, text)`
-- [ ] `select value from regex_split(pattern, text)`
-- [ ] `regex_`
-- [ ] `regex_`
+I don't have a fancy benchmark screenshot yet, but in my Mac, I get ~50% faster results with the `regexp()` in `sqlite-regex` over the "official" [regexp.c](https://github.com/sqlite/sqlite/blob/master/ext/misc/regexp.c) SQLite extension.
 
-0 vtabs
+### More regex utilities
 
-- iter
-- capture_groups
-- split
-- capture names (given regex)
+Very rarely does `regexp` cover all your regular expression needs. `sqlite-regex` also includes support for many other regex operations, such as:
 
-benchmarks
+**Find all occurances of a pattern in a string**
 
-- preoload data into tables
-- mix matching and not matching
+```sql
+select regex_find('[0-9]{3}-[0-9]{3}-[0-9]{4}', 'phone: 111-222-3333');
+-- '111-222-3333'
+
+select rowid, *
+from regex_find_all('\b\w{13}\b', 'Retroactively relinquishing remunerations is reprehensible.');
+/*
+┌───────┬───────┬─────┬───────────────┐
+│ rowid │ start │ end │     match     │
+├───────┼───────┼─────┼───────────────┤
+│ 0     │ 0     │ 13  │ Retroactively │
+│ 1     │ 14    │ 27  │ relinquishing │
+│ 2     │ 28    │ 41  │ remunerations │
+│ 3     │ 45    │ 58  │ reprehensible │
+└───────┴───────┴─────┴───────────────┘
+*/
+```
+
+**Split the string on the given pattern delimiter**
+
+```sql
+select rowid, *
+from regex_split('[ \t]+', 'a b     c d    e');
+/*
+┌───────┬──────┐
+│ rowid │ item │
+├───────┼──────┤
+│ 0     │ a    │
+│ 1     │ b    │
+│ 2     │ c    │
+│ 3     │ d    │
+│ 4     │ e    │
+└───────┴──────┘
+*/
+```
+
+**Replace occurances of a pattern with another string**
+
+```sql
+select regex_replace(
+  '(?P<last>[^,\s]+),\s+(?P<first>\S+)',
+  'Springsteen, Bruce',
+  '$first $last'
+);
+-- 'Bruce Springsteen'
+
+select regex_replace_all('a', 'abc abc', '');
+-- 'bc bc'
+```
+
+And more!

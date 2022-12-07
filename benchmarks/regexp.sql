@@ -1,4 +1,4 @@
-.load ./benchmarks/regexp
+.load ./regexp
 
 select 
   sum(
