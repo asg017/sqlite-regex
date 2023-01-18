@@ -23,7 +23,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: cargo build --verbose
+      - run: cargo build
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -46,7 +46,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: cargo build --verbose
+      - run: cargo build
       #- run: make test
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -71,7 +71,7 @@ jobs:
         with:
           toolchain: stable
       - run: rustup target add aarch64-apple-darwin
-      - run: cargo build --target=aarch64-apple-darwin --verbose
+      - run: make target=aarch64-apple-darwin loadable
       #- run: make test
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -95,7 +95,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: cargo build --verbose
+      - run: cargo build
       #- run: make test
       - name: Upload artifacts
         uses: actions/upload-artifact@v3

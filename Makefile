@@ -29,12 +29,18 @@ TARGET_LOADABLE_RELEASE=$(prefix)/release/regex0.$(LOADABLE_EXTENSION)
 TARGET_STATIC_RELEASE=$(prefix)/release/regex0.a
 
 
+ifdef target
+CARGO_TARGET=--target=$(target)
+else 
+CARGO_TARGET=
+endif
+
 $(prefix):
 	mkdir -p $(prefix)/debug
 	mkdir -p $(prefix)/release
 
 $(TARGET_LOADABLE): $(prefix) $(shell find . -type f -name '*.rs')
-	cargo build 
+	cargo build $(CARGO_TARGET)
 	cp target/debug/$(LIBRARY_PREFIX)sqlite_regex.$(LOADABLE_EXTENSION) $@
 
 $(TARGET_STATIC): $(prefix) $(shell find . -type f -name '*.rs')
