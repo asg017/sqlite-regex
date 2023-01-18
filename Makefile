@@ -31,9 +31,12 @@ TARGET_STATIC_RELEASE=$(prefix)/release/regex0.a
 
 ifdef target
 CARGO_TARGET=--target=$(target)
+BUILT_LOCATION=target/$(target)/debug/$(LIBRARY_PREFIX)sqlite_regex.$(LOADABLE_EXTENSION)
 else 
 CARGO_TARGET=
+BUILT_LOCATION=target/debug/$(LIBRARY_PREFIX)sqlite_regex.$(LOADABLE_EXTENSION)
 endif
+
 
 $(prefix):
 	mkdir -p $(prefix)/debug
@@ -41,7 +44,7 @@ $(prefix):
 
 $(TARGET_LOADABLE): $(prefix) $(shell find . -type f -name '*.rs')
 	cargo build $(CARGO_TARGET)
-	cp target/debug/$(LIBRARY_PREFIX)sqlite_regex.$(LOADABLE_EXTENSION) $@
+	cp $(BUILT_LOCATION) $@
 
 $(TARGET_STATIC): $(prefix) $(shell find . -type f -name '*.rs')
 	cargo build 
