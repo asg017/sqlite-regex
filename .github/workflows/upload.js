@@ -25,8 +25,12 @@ module.exports = async ({ github, context }) => {
     });
   }
   await Promise.all([
-    uploadReleaseAsset("sqlite-regex-ubuntu/libregex0.so", "regex0.so"),
-    uploadReleaseAsset("sqlite-regex-macos/libregex0.dylib", "regex0.dylib"),
+    uploadReleaseAsset("sqlite-regex-ubuntu/regex0.so", "regex0.so"),
+    uploadReleaseAsset("sqlite-regex-macos/regex0.dylib", "regex0.dylib"),
+    uploadReleaseAsset(
+      "sqlite-regex-macos-arm/regex0.dylib",
+      "macos-arm-regex0.dylib"
+    ),
     uploadReleaseAsset("sqlite-regex-windows/regex0.dll", "regex0.dll"),
   ]);
 
