@@ -23,7 +23,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: cargo build
+      - run: make loadable
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -46,7 +46,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: cargo build
+      - run: make loadable
       #- run: make test
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -95,7 +95,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: cargo build
+      - run: make loadable
       #- run: make test
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
