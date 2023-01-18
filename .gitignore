@@ -4,6 +4,7 @@ benchmarks/*.sqlite
 benchmarks/*.duckdb
 benchmarks/*.dylib
 benchmarks/regexp.c
+benchmarks/sqlite3-re.c
 benchmarks/re.c
 benchmarks/re.h
 *.db
