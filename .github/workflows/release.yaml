@@ -1,16 +1,16 @@
-name: "test build"
+name: "release"
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  test-ubuntu:
-    name: Testing ubuntu-latest
+  build-ubuntu:
+    name: Build ubuntu-latest
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - uses: actions/cache@v3
         with:
           path: |
@@ -23,17 +23,17 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: make loadable
+      - run: make loadable-release
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: sqlite-regex-ubuntu
-          path: dist/debug/regex0.so
-  test-macos:
-    name: Testing macos-latest
+          path: dist/release/regex0.so
+  build-macos:
+    name: Build macos-latest
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - uses: actions/cache@v3
         with:
           path: |
@@ -46,15 +46,14 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: make loadable
-      #- run: make test
+      - run: make loadable-release
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: sqlite-regex-macos
-          path: dist/debug/regex0.dylib
-  test-macos-arm:
-    name: Testing macos-latest with arm
+          path: dist/release/regex0.dylib
+  build-macos-arm:
+    name: Build macos-latest with arm
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -78,11 +77,11 @@ jobs:
         with:
           name: sqlite-regex-macos-arm
           path: dist/debug/regex0.dylib
-  test-windows:
-    name: Testing windows-latest
+  build-windows:
+    name: Build windows-latest
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - uses: actions/cache@v3
         with:
           path: |
@@ -95,10 +94,25 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: make loadable
-      #- run: make test
+      - run: make loadable-release
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: sqlite-regex-windows
-          path: dist/debug/regex0.dll
+          path: dist/release/regex0.dll
+  upload:
+    name: upload
+    needs: [build-macos, build-macos-arm, build-ubuntu, build-windows]
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download workflow artifacts
+        uses: actions/download-artifact@v2
+      - uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const script = require('.github/workflows/upload.js')
+            await script({github, context})

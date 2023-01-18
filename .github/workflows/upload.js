@@ -9,7 +9,7 @@ module.exports = async ({ github, context }) => {
   const release = await github.rest.repos.getReleaseByTag({
     owner,
     repo,
-    tag: "unstable",
+    tag: process.env.GITHUB_REF.replace("refs/tags/", ""),
   });
 
   const release_id = release.data.id;
@@ -25,13 +25,22 @@ module.exports = async ({ github, context }) => {
     });
   }
   await Promise.all([
-    uploadReleaseAsset("sqlite-regex-ubuntu/regex0.so", "regex0.so"),
-    uploadReleaseAsset("sqlite-regex-macos/regex0.dylib", "regex0.dylib"),
+    uploadReleaseAsset(
+      "sqlite-regex-ubuntu/regex0.so",
+      "linux-x86_64-regex0.so"
+    ),
+    uploadReleaseAsset(
+      "sqlite-regex-macos/regex0.dylib",
+      "macos-x86_64-regex0.dylib"
+    ),
     uploadReleaseAsset(
       "sqlite-regex-macos-arm/regex0.dylib",
       "macos-arm-regex0.dylib"
     ),
-    uploadReleaseAsset("sqlite-regex-windows/regex0.dll", "regex0.dll"),
+    uploadReleaseAsset(
+      "sqlite-regex-windows/regex0.dll",
+      "windows-x86_64-regex0.dll"
+    ),
   ]);
 
   return;
