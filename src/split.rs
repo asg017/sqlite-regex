@@ -1,9 +1,9 @@
-use sqlite_loadable::prelude::*;
 use sqlite_loadable::{
     api,
     table::{ConstraintOperator, IndexInfo, VTab, VTabArguments, VTabCursor},
     BestIndexError, Result,
 };
+use sqlite_loadable::{prelude::*, Error};
 
 use std::{marker::PhantomData, mem, os::raw::c_int};
 
@@ -116,8 +116,16 @@ impl VTabCursor for RegexSplitCursor<'_> {
         _idx_str: Option<&str>,
         values: &[*mut sqlite3_value],
     ) -> Result<()> {
-        let r = value_regex(values.get(0).unwrap())?;
-        let contents = api::value_text_notnull(values.get(1).unwrap())?;
+        let r = value_regex(
+            values
+                .get(0)
+                .ok_or_else(|| Error::new_message("expected 1st argument as regex"))?,
+        )?;
+        let contents = api::value_text_notnull(
+            values
+                .get(1)
+                .ok_or_else(|| Error::new_message("expected 2nd argument as contents"))?,
+        )?;
 
         let split = r.split(contents);
         self.split = Some(split.map(|i| i.to_string()).collect());
@@ -139,7 +147,19 @@ impl VTabCursor for RegexSplitCursor<'_> {
             Some(Columns::Item) => {
                 api::result_text(
                     context,
-                    self.split.as_ref().unwrap().get(self.rowid).unwrap(),
+                    self.split
+                        .as_ref()
+                        .ok_or_else(|| {
+                            Error::new_message(
+                                "sqlite-regex internal error: self.split is not defined",
+                            )
+                        })?
+                        .get(self.rowid)
+                        .ok_or_else(|| {
+                            Error::new_message(
+                              "sqlite-regex internal error: self.rowid greater than matches result",
+                          )
+                        })?,
                 )?;
             }
             Some(Columns::Contents) => {
@@ -151,6 +171,6 @@ impl VTabCursor for RegexSplitCursor<'_> {
     }
 
     fn rowid(&self) -> Result<i64> {
-        Ok(self.rowid.try_into().unwrap())
+        Ok(self.rowid as i64)
     }
 }

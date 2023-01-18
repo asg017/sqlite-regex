@@ -151,14 +151,25 @@ impl VTabCursor for RegexFindAllCursor<'_> {
     }
 
     fn column(&self, context: *mut sqlite3_context, i: c_int) -> Result<()> {
-        let m = self.matches.as_ref().unwrap().get(self.curr).unwrap();
+        let m = self
+            .matches
+            .as_ref()
+            .ok_or_else(|| {
+                Error::new_message("sqlite-regex internal error: self.match is not defined")
+            })?
+            .get(self.curr)
+            .ok_or_else(|| {
+                Error::new_message(
+                    "sqlite-regex internal error: self.curr greater than matches result",
+                )
+            })?;
 
         match column(i) {
             Some(Columns::Start) => {
-                api::result_int(context, m.0.try_into().unwrap());
+                api::result_int(context, m.0 as i32);
             }
             Some(Columns::End) => {
-                api::result_int(context, m.1.try_into().unwrap());
+                api::result_int(context, m.1 as i32);
             }
             Some(Columns::Match) => {
                 api::result_text(context, &m.2)?;

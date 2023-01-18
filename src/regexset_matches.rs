@@ -1,10 +1,10 @@
 use regex::RegexSet;
-use sqlite_loadable::prelude::*;
 use sqlite_loadable::{
     api,
     table::{ConstraintOperator, IndexInfo, VTab, VTabArguments, VTabCursor},
     BestIndexError, Result,
 };
+use sqlite_loadable::{prelude::*, Error};
 
 use std::{mem, os::raw::c_int};
 
@@ -120,8 +120,12 @@ impl VTabCursor for RegexSetMatchesCursor {
         _idx_str: Option<&str>,
         values: &[*mut sqlite3_value],
     ) -> Result<()> {
-        let r = value_regexset(values.get(0).unwrap())?;
-        let contents = api::value_text_notnull(values.get(1).unwrap())?;
+        let r = value_regexset(values.get(0).ok_or_else(|| {
+            Error::new_message("internal error: pattern not passed into xFilter")
+        })?)?;
+        let contents = api::value_text_notnull(values.get(1).ok_or_else(|| {
+            Error::new_message("internal error: contents not passed into xFilter")
+        })?)?;
         self.regex_set = Some((*r).clone());
         self.matches = Some(r.matches(contents).into_iter().collect());
         self.rowid = 0;
@@ -141,25 +145,54 @@ impl VTabCursor for RegexSetMatchesCursor {
     }
 
     fn column(&self, context: *mut sqlite3_context, i: c_int) -> Result<()> {
-        let match_idx = self.matches.as_ref().unwrap().get(self.rowid).unwrap();
+        let match_idx = self
+            .matches
+            .as_ref()
+            .ok_or_else(|| {
+                Error::new_message("sqlite-regex internal error: self.matches is not defined")
+            })?
+            .get(self.rowid)
+            .ok_or_else(|| {
+                Error::new_message(
+                    "sqlite-regex internal error: self.rowid greater than matches result",
+                )
+            })?;
 
         match column(i) {
             Some(Columns::Key) => {
-                api::result_int(context, (*match_idx).try_into().unwrap());
+                api::result_int(context, (*match_idx) as i32);
             }
             Some(Columns::RegexPattern) => {
-                //api::result_int(context, (*m).try_into().unwrap());
                 let pattern = self
                     .regex_set
                     .as_ref()
-                    .unwrap()
+                    .ok_or_else(|| {
+                        Error::new_message(
+                            "sqlite-regex internal error: self.regex_set is not defined",
+                        )
+                    })?
                     .patterns()
                     .get(*match_idx)
-                    .unwrap();
+                    .ok_or_else(|| {
+                        Error::new_message(
+                            "sqlite-regex internal error: match_idx greater than matches result",
+                        )
+                    })?;
                 api::result_text(context, pattern)?;
             }
             Some(Columns::Regexset) => {
-                api::result_json(context, self.regex_set.as_ref().unwrap().patterns().into())?;
+                api::result_json(
+                    context,
+                    self.regex_set
+                        .as_ref()
+                        .ok_or_else(|| {
+                            Error::new_message(
+                                "sqlite-regex internal error: self.regex_set is not defined",
+                            )
+                        })?
+                        .patterns()
+                        .into(),
+                )?;
             }
             Some(Columns::Contents) => {}
             None => (),
