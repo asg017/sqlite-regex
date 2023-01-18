@@ -61,6 +61,14 @@ select regex_find();
 --
 ```
 
+<h3 name="regex_find_all"><code>select * from regex_find_all()</code></h3>
+
+https://docs.rs/regex/latest/regex/struct.Regex.html#method.find_iter
+
+```sql
+select * from regex_find_all();
+```
+
 <h3 name="regex_replace"><code>regex_replace()</code></h3>
 
 https://docs.rs/regex/latest/regex/struct.Regex.html#method.replace
@@ -68,14 +76,6 @@ https://docs.rs/regex/latest/regex/struct.Regex.html#method.replace
 ```sql
 select regex_replace();
 --
-```
-
-<h3 name="regex_find_all"><code>select * from regex_find_all()</code></h3>
-
-https://docs.rs/regex/latest/regex/struct.Regex.html#method.find_iter
-
-```sql
-select * from regex_find_all();
 ```
 
 <h3 name="regex_split"><code>select * from regex_split()</code></h3>
