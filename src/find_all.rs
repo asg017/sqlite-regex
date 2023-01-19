@@ -137,6 +137,7 @@ impl VTabCursor for RegexFindAllCursor<'_> {
         for m in r.find_iter(contents) {
             res.push((m.start(), m.end(), m.as_str().to_string()))
         }
+        Box::into_raw(r);
         self.matches = Some(res);
         Ok(())
     }

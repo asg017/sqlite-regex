@@ -129,6 +129,7 @@ impl VTabCursor for RegexSplitCursor<'_> {
 
         let split = r.split(contents);
         self.split = Some(split.map(|i| i.to_string()).collect());
+        Box::into_raw(r);
         self.rowid = 0;
         Ok(())
     }

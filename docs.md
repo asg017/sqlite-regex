@@ -25,16 +25,15 @@ select 'x' regexp '[abc]'; -- 0
 
 <h3 name="regex"><code>regex(pattern)</code></h3>
 
-Creates a regex object with the given pattern.
+Creates a regex "object" with the given pattern, using [SQLite's pointer passing interface](https://www.sqlite.org/bindptr.html). Useful when caching regex patterns in heavy queries that use `sqlite-regex` table functions, like [`regex_split`](#regex_split) or [`regex_find_all`](#regex_find_all).
 
-https://docs.rs/regex/latest/regex/struct.Regex.html
-
-https://www.sqlite.org/bindptr.html
+Note that the return value will appear to be `NULL` because of SQLite pointer passing interface.
 
 ```sql
-select regex("[abc]"); -- NULL
-select regex("[abc"); -- Errors with ''
-select regex_print(regex())
+select regex("[abc]"); -- NULL, but is still a regex "object"
+select regex("[abc"); -- Errors with 'Error parsing pattern as regex: ...'
+
+select regex_print(regex("[abc]"));
 --
 ```
 
@@ -54,7 +53,7 @@ select regex_valid();
 
 <h3 name="regex_find"><code>regex_find()</code></h3>
 
-https://docs.rs/regex/latest/regex/struct.Regex.html#method.find
+Based on [`Regex.find()`](https://docs.rs/regex/latest/regex/struct.Regex.html#method.find).
 
 ```sql
 select regex_find();
@@ -63,7 +62,7 @@ select regex_find();
 
 <h3 name="regex_find_all"><code>select * from regex_find_all()</code></h3>
 
-https://docs.rs/regex/latest/regex/struct.Regex.html#method.find_iter
+Based on [`Regex.find_iter()`](https://docs.rs/regex/latest/regex/struct.Regex.html#method.find_iter).
 
 ```sql
 select * from regex_find_all();
@@ -71,7 +70,7 @@ select * from regex_find_all();
 
 <h3 name="regex_replace"><code>regex_replace()</code></h3>
 
-https://docs.rs/regex/latest/regex/struct.Regex.html#method.replace
+Based on [`Regex.replace()`](https://docs.rs/regex/latest/regex/struct.Regex.html#method.replace)
 
 ```sql
 select regex_replace();
@@ -80,7 +79,7 @@ select regex_replace();
 
 <h3 name="regex_split"><code>select * from regex_split()</code></h3>
 
-https://docs.rs/regex/latest/regex/struct.Regex.html#method.split
+Based on [`Regex.split()`](https://docs.rs/regex/latest/regex/struct.Regex.html#method.split).
 
 ```sql
 select * from regex_split();
@@ -88,7 +87,7 @@ select * from regex_split();
 
 <h3 name="regexset"><code>regexset()</code></h3>
 
-https://docs.rs/regex/latest/regex/struct.RegexSet.html
+Based on [`RegexSet`](https://docs.rs/regex/latest/regex/struct.RegexSet.html).
 
 ```sql
 select regexset();
@@ -103,8 +102,7 @@ select regexset_print();
 ```
 
 <h3 name="regexset_is_match"><code>regexset_is_match()</code></h3>
-https://docs.rs/regex/latest/regex/struct.Regex.html#method.is_match
-https://docs.rs/regex/latest/regex/struct.RegexSet.html#method.is_match
+Based on Based on [`RegexSet.is_match()`](https://docs.rs/regex/latest/regex/struct.RegexSet.html#method.is_match).
 
 ```sql
 select regexset_is_match();
@@ -113,7 +111,7 @@ select regexset_is_match();
 
 <h3 name="regexset_matches"><code>select * from regexset_matches()</code></h3>
 
-https://docs.rs/regex/latest/regex/struct.RegexSet.html#method.matches
+Based on [`RegexSet.matches()`](https://docs.rs/regex/latest/regex/struct.RegexSet.html#method.matches).
 
 ```sql
 select

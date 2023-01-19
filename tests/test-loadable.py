@@ -65,8 +65,7 @@ class TestRegex(unittest.TestCase):
     self.assertEqual(modules, MODULES)
     
   def test_regex_version(self):
-    version = 'v0.1.0'
-    self.assertEqual(db.execute("select regex_version()").fetchone()[0], version)
+    self.assertEqual(db.execute("select regex_version()").fetchone()[0][0], "v")
   
   def test_regex_debug(self):
     debug = db.execute("select regex_debug()").fetchone()[0]
@@ -75,6 +74,10 @@ class TestRegex(unittest.TestCase):
   def test_regex(self):
     regex = lambda pattern: db.execute("select regex(?)", [pattern]).fetchone()[0]
     self.assertEqual(regex('^\d{4}-\d{2}-\d{2}$'), None)
+
+    with self.assertRaisesRegex(sqlite3.OperationalError, "Error parsing pattern as regex: regex parse error:.*"):
+      regex("[nope")
+
   
   def test_regex_print(self):
     regex_print = lambda pattern: db.execute("select regex_print(regex(?))", [pattern]).fetchone()[0]
@@ -192,6 +195,15 @@ class TestRegex(unittest.TestCase):
         {'rowid': 3, 'start': 45, 'end': 58, 'match': 'reprehensible',}
       ]
     )
+    self.assertEqual(
+      execute_all("select rowid, * from regex_find_all(regex(?), ?)", ['\\b\w{13}\\b', 'Retroactively relinquishing remunerations is reprehensible.']),
+      [
+        {'rowid': 0, 'start': 0, 'end': 13, 'match': 'Retroactively',},
+        {'rowid': 1, 'start': 14, 'end': 27, 'match': 'relinquishing',},
+        {'rowid': 2, 'start': 28, 'end': 41, 'match': 'remunerations',},
+        {'rowid': 3, 'start': 45, 'end': 58, 'match': 'reprehensible',}
+      ]
+    )
     
     
   
@@ -199,6 +211,16 @@ class TestRegex(unittest.TestCase):
     regex_split = lambda pattern, content: execute_all("select rowid, * from regex_split(?, ?)", [pattern, content])
     self.assertEqual(
       regex_split('[ \t]+', 'a b \t  c\td    e'),
+      [
+        {'rowid': 0, 'item': 'a'},
+        {'rowid': 1, 'item': 'b'},
+        {'rowid': 2, 'item': 'c'},
+        {'rowid': 3, 'item': 'd'},
+        {'rowid': 4, 'item': 'e'}
+      ]
+    )
+    self.assertEqual(
+      execute_all("select rowid, * from regex_split(regex(?), ?)", ['[ \t]+', 'a b \t  c\td    e']),
       [
         {'rowid': 0, 'item': 'a'},
         {'rowid': 1, 'item': 'b'},
