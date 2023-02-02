@@ -8,3 +8,6 @@ benchmarks/sqlite3-re.c
 benchmarks/re.c
 benchmarks/re.h
 *.db
+*.dylib
+*.so
+*.dll
