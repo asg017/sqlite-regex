@@ -1,6 +1,6 @@
 from setuptools import setup
 
-VERSION = "0.1.1-alpha.3"
+VERSION = "0.1.1-alpha.4"
 
 setup(
     name="datasette-sqlite-regex",
