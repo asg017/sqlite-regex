@@ -77,22 +77,22 @@ $(TARGET_LOADABLE_RELEASE): $(prefix) $(shell find . -type f -name '*.rs')
 python: $(TARGET_WHEELS) $(TARGET_LOADABLE) python/sqlite_regex/setup.py python/sqlite_regex/sqlite_regex/__init__.py .github/workflows/rename-wheels.py
 	cp $(TARGET_LOADABLE) $(INTERMEDIATE_PYPACKAGE_EXTENSION) 
 	rm $(TARGET_WHEELS)/sqlite_regex* || true
-	pip wheel python/sqlite_regex/ -w $(TARGET_WHEELS)
+	pip3 wheel python/sqlite_regex/ -w $(TARGET_WHEELS)
 	python3 .github/workflows/rename-wheels.py $(TARGET_WHEELS) $(RENAME_WHEELS_ARGS)
 
 python-release: $(TARGET_LOADABLE_RELEASE) $(TARGET_WHEELS_RELEASE) python/sqlite_regex/setup.py python/sqlite_regex/sqlite_regex/__init__.py .github/workflows/rename-wheels.py
 	cp $(TARGET_LOADABLE_RELEASE)  $(INTERMEDIATE_PYPACKAGE_EXTENSION) 
 	rm $(TARGET_WHEELS_RELEASE)/sqlite_regex* || true
-	pip wheel python/sqlite_regex/ -w $(TARGET_WHEELS_RELEASE)
+	pip3 wheel python/sqlite_regex/ -w $(TARGET_WHEELS_RELEASE)
 	python3 .github/workflows/rename-wheels.py $(TARGET_WHEELS_RELEASE) $(RENAME_WHEELS_ARGS)
 
 datasette: $(TARGET_WHEELS) python/datasette_sqlite_regex/setup.py python/datasette_sqlite_regex/datasette_sqlite_regex/__init__.py
 	rm $(TARGET_WHEELS)/datasette* || true
-	pip wheel python/datasette_sqlite_regex/ --no-deps -w $(TARGET_WHEELS)
+	pip3 wheel python/datasette_sqlite_regex/ --no-deps -w $(TARGET_WHEELS)
 
 datasette-release: $(TARGET_WHEELS_RELEASE) python/datasette_sqlite_regex/setup.py python/datasette_sqlite_regex/datasette_sqlite_regex/__init__.py
 	rm $(TARGET_WHEELS_RELEASE)/datasette* || true
-	pip wheel python/datasette_sqlite_regex/ --no-deps -w $(TARGET_WHEELS_RELEASE)
+	pip3 wheel python/datasette_sqlite_regex/ --no-deps -w $(TARGET_WHEELS_RELEASE)
 
 format:
 	cargo fmt

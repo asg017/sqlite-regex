@@ -21,7 +21,7 @@ for filename in os.listdir(wheel_dir):
     .replace('cp39-cp39', 'py3-none')
     .replace('cp310-cp310', 'py3-none')
     .replace('cp311-cp311', 'py3-none')
-    .replace('linux_x86_64', 'manylinux_2_17_x86_64.manylinux2014_x86_64')
+    .replace('linux_x86_64', 'manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux1_x86_64')
     
     
   )
