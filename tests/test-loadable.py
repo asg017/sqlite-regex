@@ -196,12 +196,22 @@ class TestRegex(unittest.TestCase):
       ]
     )
     self.assertEqual(
-      execute_all("select rowid, * from regex_find_all(regex(?), ?)", ['\\b\w{13}\\b', 'Retroactively relinquishing remunerations is reprehensible.']),
+      execute_all("""
+        with inputs as (
+          select value as text
+          from json_each(?)
+        )
+        select rowid, matches.* 
+        from inputs
+        join regex_find_all(regex(?), inputs.text) as matches
+        """, ['["Retroactively relinquishing remunerations is reprehensible.", "embezzlements objectivizing"]', '\\b\w{13}\\b']),
       [
         {'rowid': 0, 'start': 0, 'end': 13, 'match': 'Retroactively',},
         {'rowid': 1, 'start': 14, 'end': 27, 'match': 'relinquishing',},
         {'rowid': 2, 'start': 28, 'end': 41, 'match': 'remunerations',},
-        {'rowid': 3, 'start': 45, 'end': 58, 'match': 'reprehensible',}
+        {'rowid': 3, 'start': 45, 'end': 58, 'match': 'reprehensible',},
+        {'rowid': 0, 'start': 0, 'end': 13, 'match': 'embezzlements',},
+        {'rowid': 1, 'start': 14, 'end': 27, 'match': 'objectivizing',},
       ]
     )
     

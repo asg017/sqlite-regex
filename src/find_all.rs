@@ -139,6 +139,7 @@ impl VTabCursor for RegexFindAllCursor<'_> {
         }
         Box::into_raw(r);
         self.matches = Some(res);
+        self.curr = 0;
         Ok(())
     }
 
