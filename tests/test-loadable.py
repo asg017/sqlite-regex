@@ -201,7 +201,7 @@ class TestRegex(unittest.TestCase):
           select value as text
           from json_each(?)
         )
-        select rowid, matches.* 
+        select matches.rowid, matches.* 
         from inputs
         join regex_find_all(regex(?), inputs.text) as matches
         """, ['["Retroactively relinquishing remunerations is reprehensible.", "embezzlements objectivizing"]', '\\b\w{13}\\b']),
