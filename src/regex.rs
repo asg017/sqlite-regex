@@ -74,7 +74,7 @@ pub fn regex_find(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) 
     Ok(())
 }
 
-/// regex_fund_at(regex, contents, offset)
+/// regex_find_at(regex, contents, offset)
 pub fn regex_find_at(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
     let (regex, input_type) = regex_from_value_or_cache(context, values, 0)?;
 
