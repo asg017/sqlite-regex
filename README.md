@@ -12,7 +12,7 @@ If your company or organization finds this library useful, consider [supporting 
 
 ```sql
 .load ./regex0
-select 'foo' matches 'f';
+select 'foo' regexp 'f';
 
 ```
 

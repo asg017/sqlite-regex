@@ -76,7 +76,7 @@ impl<'vtab> VTab<'vtab> for RegexFindAllTable {
                         return Err(BestIndexError::Constraint);
                     }
                 }
-                _ => todo!(),
+                _ => (),
             }
         }
         if !has_pattern || !has_contents {

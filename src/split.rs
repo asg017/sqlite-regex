@@ -71,7 +71,7 @@ impl<'vtab> VTab<'vtab> for RegexSplitTable {
                         return Err(BestIndexError::Constraint);
                     }
                 }
-                _ => todo!(),
+                _ => (),
             }
         }
         if !has_pattern || !has_contents {
@@ -93,6 +93,7 @@ impl<'vtab> VTab<'vtab> for RegexSplitTable {
 pub struct RegexSplitCursor<'vtab> {
     /// Base class. Must be first
     base: sqlite3_vtab_cursor,
+    contents: Option<String>,
     split: Option<Vec<String>>,
     rowid: usize,
     phantom: PhantomData<&'vtab RegexSplitTable>,
@@ -102,6 +103,7 @@ impl RegexSplitCursor<'_> {
         let base: sqlite3_vtab_cursor = unsafe { mem::zeroed() };
         RegexSplitCursor {
             base,
+            contents: None,
             split: None,
             rowid: 0,
             phantom: PhantomData,
@@ -131,6 +133,7 @@ impl VTabCursor for RegexSplitCursor<'_> {
         self.split = Some(split.map(|i| i.to_string()).collect());
         Box::into_raw(r);
         self.rowid = 0;
+        self.contents = Some(contents.to_owned());
         Ok(())
     }
 
@@ -163,8 +166,11 @@ impl VTabCursor for RegexSplitCursor<'_> {
                         })?,
                 )?;
             }
+            // TODO return contents as text
             Some(Columns::Contents) => {
-                todo!()
+                if let Some(contents) = &self.contents {
+                    api::result_text(context, contents)?;
+                }
             }
             _ => (),
         }
