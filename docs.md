@@ -75,17 +75,21 @@ select regex_find(
 
 <h3 name="regex_find_all"><code>select * from regex_find_all(pattern, text)</code></h3>
 
+Find all instances of a pattern in the given text. Based on [`Regex.find_iter()`](https://docs.rs/regex/latest/regex/struct.Regex.html#method.find_iter).
+
+The returned columns:
+
 - `rowid`: The 0-based index of the match.
 - `start`: The 0-based index of the starting character of the match inside the text.
 - `end`: The 0-based index of the ending character of the match inside the text.
 - `match`: The full string match.
 
-Based on [`Regex.find_iter()`](https://docs.rs/regex/latest/regex/struct.Regex.html#method.find_iter).
+For faster results, wrap the pattern with the [`regex()`](#regex) function for caching.
 
 ```sql
 select rowid, *
 from regex_find_all(
-  '\b\w{13}\b',
+  regex('\b\w{13}\b'),
   'Retroactively relinquishing remunerations is reprehensible.'
 );
 /*
@@ -137,6 +141,13 @@ select regex_replace_all(
 <h3 name="regex_split"><code>select * from regex_split(pattern, text)</code></h3>
 
 Split the given text on each instance of the given pattern. Based on [`Regex.split()`](https://docs.rs/regex/latest/regex/struct.Regex.html#method.split).
+
+The returned columns:
+
+- `rowid`: The 0-based index of the split item.
+- `item`: The individual split item, as text.
+
+For faster results, wrap the pattern with the [`regex()`](#regex) function for caching.
 
 ```sql
 select rowid, *
