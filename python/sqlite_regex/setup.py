@@ -2,7 +2,13 @@ from setuptools import setup, Extension
 import os
 import platform
 
-VERSION = "0.2.0"
+version = {}
+with open("sqlite_regex/version.py") as fp:
+    exec(fp.read(), version)
+
+VERSION = version['__version__']
+
+
 
 system = platform.system()
 machine = platform.machine()
