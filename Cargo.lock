@@ -362,7 +362,7 @@ dependencies = [
 
 [[package]]
 name = "sqlite-regex"
-version = "0.2.2"
+version = "0.2.3-alpha.1"
 dependencies = [
  "regex",
  "sqlite-loadable",
