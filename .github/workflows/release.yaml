@@ -171,7 +171,7 @@ jobs:
         with:
           name: sqlite-regex-windows-wheels
           path: dist/release/wheels/*.whl
-  upload-release-assets:
+  upload-extensions:
     name: Upload release assets
     needs:
       [
@@ -194,7 +194,55 @@ jobs:
           script: |
             const script = require('.github/workflows/upload.js')
             await script({github, context})
-  upload_pypi:
+  upload-npm:
+    needs:
+      [
+        build-macos-extension,
+        build-macos-arm-extension,
+        build-ubuntu-extension,
+        build-windows-extension,
+      ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download workflow artifacts
+        uses: actions/download-artifact@v2
+      - run: |
+          cp sqlite-regex-ubuntu/regex0.so npm/sqlite-regex-linux-x64/lib/regex0.so
+          cp sqlite-regex-macos/regex0.dylib npm/sqlite-regex-darwin-x64/lib/regex0.dylib
+          cp sqlite-regex-macos-arm/regex0.dylib npm/sqlite-regex-darwin-arm64/lib/regex0.dylib
+          cp sqlite-regex-windows/regex0.dll npm/sqlite-regex-windows-x64/lib/regex0.dll
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+          registry-url: "https://registry.npmjs.org"
+      - name: Publish NPM sqlite-regex-linux-x64
+        working-directory: npm/sqlite-regex-linux-x64
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish NPM sqlite-regex-darwin-x64
+        working-directory: npm/sqlite-regex-darwin-x64
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish NPM sqlite-regex-darwin-arm64
+        working-directory: npm/sqlite-regex-darwin-arm64
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish NPM sqlite-regex-windows-x64
+        working-directory: npm/sqlite-regex-windows-x64
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish NPM sqlite-regex
+        working-directory: npm/sqlite-regex
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  upload-pypi:
     needs:
       [
         build-ubuntu-python,

@@ -94,6 +94,9 @@ datasette-release: $(TARGET_WHEELS_RELEASE) python/datasette_sqlite_regex/setup.
 	rm $(TARGET_WHEELS_RELEASE)/datasette* || true
 	pip3 wheel python/datasette_sqlite_regex/ --no-deps -w $(TARGET_WHEELS_RELEASE)
 
+npm: VERSION npm/platform-package.README.md.tmpl npm/platform-package.package.json.tmpl npm/sqlite-regex/package.json.tmpl scripts/npm_generate_platform_packages.sh
+	scripts/npm_generate_platform_packages.sh
+
 Cargo.toml: VERSION
 	cargo set-version `cat VERSION`
 
@@ -107,6 +110,7 @@ version:
 	make Cargo.toml
 	make python/sqlite_regex/sqlite_regex/version.py
 	make python/datasette_sqlite_regex/datasette_sqlite_regex/version.py
+	make npm
 
 
 format:
@@ -136,9 +140,13 @@ test-loadable:
 test-python:
 	$(PYTHON) tests/test-python.py
 
+test-npm:
+	node npm/sqlite-regex/test.js
+
 test:
 	make test-loadable
 	make test-python
+	make test-npm
 
 .PHONY: clean \
 	test test-loadable test-python \
@@ -147,4 +155,5 @@ test:
 	datasette datasette-release \
 	static static-release \
 	debug release \
-	version
+	format version \
+	npm
