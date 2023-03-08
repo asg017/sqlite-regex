@@ -3,13 +3,13 @@
 # `x/sqlite_regex` Deno Module
 
 [![Tags](https://img.shields.io/github/release/asg017/sqlite-regex)](https://github.com/asg017/sqlite-regex/releases)
-[![Doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/sqlite-regex@0.2.3-alpha.1/mod.ts)
+[![Doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/sqlite-regex@0.2.3-alpha.2/mod.ts)
 
 The [`sqlite-regex`](https://github.com/asg017/sqlite-regex) SQLite extension is available to Deno developers with the [`x/sqlite_regex`](https://deno.land/x/sqlite_regex) Deno module. It works with [`x/sqlite3`](https://deno.land/x/sqlite3), the fastest and native Deno SQLite3 module.
 
 ```js
 import { Database } from "https://deno.land/x/sqlite3@0.8.0/mod.ts";
-import * as sqlite_regex from "https://deno.land/x/sqlite_regex@v0.2.3-alpha.1/mod.ts";
+import * as sqlite_regex from "https://deno.land/x/sqlite_regex@v0.2.3-alpha.2/mod.ts";
 
 const db = new Database(":memory:");
 
