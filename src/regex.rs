@@ -2,6 +2,7 @@ use regex::Regex;
 
 use crate::utils::{
     cleanup_regex_value_cached, regex_from_value_or_cache, result_regex, value_regex,
+    value_regex_captures, CaptureGroupKey,
 };
 use sqlite_loadable::prelude::*;
 use sqlite_loadable::{api, Error, Result};
@@ -145,5 +146,85 @@ pub fn regex_replace_all(
     api::result_text(context, &result)?;
 
     cleanup_regex_value_cached(context, regex, input_type);
+    Ok(())
+}
+
+/// regex_capture(regex, contents, group)
+pub fn regex_capture(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
+    let (regex, input_type) = regex_from_value_or_cache(context, values, 0)?;
+
+    let content = api::value_text_notnull(
+        values
+            .get(1)
+            .ok_or_else(|| Error::new_message("expected 2nd argument as contents"))?,
+    )?;
+    let group_arg = values
+        .get(2)
+        .ok_or_else(|| Error::new_message("expected 3rd argument as group index or name"))?;
+
+    let result = regex.as_ref().captures(content);
+    match result {
+        None => api::result_null(context),
+        Some(captures) => {
+            let matched_capture = match api::value_type(group_arg) {
+                api::ValueType::Integer => captures.get(api::value_int64(group_arg) as usize),
+                _ => {
+                    let name = api::value_text(group_arg)?;
+                    captures.name(name)
+                }
+            };
+            match matched_capture {
+                None => api::result_null(context),
+                Some(matched_group) => {
+                    api::result_text(context, matched_group.as_str())?;
+                }
+            }
+        }
+    }
+    cleanup_regex_value_cached(context, regex, input_type);
+    Ok(())
+}
+
+/// regex_capture(regex, contents, group)
+pub fn regex_capture2(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
+    let captures = value_regex_captures(
+        values
+            .get(0)
+            .ok_or_else(|| Error::new_message("expected 1st argument as capture group"))?,
+    )?;
+    let group_arg = values
+        .get(1)
+        .ok_or_else(|| Error::new_message("expected 3rd argument as group index or name"))?;
+
+    let matched_capture = match api::value_type(group_arg) {
+        api::ValueType::Integer => {
+            let lookup = api::value_int64(group_arg) as usize;
+            captures.iter().find(|c| {
+                if let CaptureGroupKey::Index(idx) = c.key {
+                    idx == lookup
+                } else {
+                    false
+                }
+            })
+        }
+        _ => {
+            let name = api::value_text(group_arg)?;
+            captures.iter().find(|c| {
+                if let CaptureGroupKey::Name(n) = &c.key {
+                    name == n
+                } else {
+                    false
+                }
+            })
+        }
+    };
+    match matched_capture {
+        None => api::result_null(context),
+        Some(m) => match &m.value {
+            Some(v) => api::result_text(context, v.as_str())?,
+            None => api::result_null(context),
+        },
+    }
+    Box::into_raw(captures);
     Ok(())
 }

@@ -42,6 +42,28 @@ from regex_find_all(
 */
 ```
 
+**Extract capture group values by index or name**
+
+```sql
+select
+  regex_capture(captures, 0)        as entire_match,
+  regex_capture(captures, 'title')  as title,
+  regex_capture(captures, 'year')   as year
+from regex_captures(
+  regex("'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)"),
+  "'Citizen Kane' (1941), 'The Wizard of Oz' (1939), 'M' (1931)."
+);
+/*
+┌───────────────────────────┬──────────────────┬──────┐
+│       entire_match        │      title       │ year │
+├───────────────────────────┼──────────────────┼──────┤
+│ 'Citizen Kane' (1941)     │ Citizen Kane     │ 1941 │
+│ 'The Wizard of Oz' (1939) │ The Wizard of Oz │ 1939 │
+│ 'M' (1931)                │ M                │ 1931 │
+└───────────────────────────┴──────────────────┴──────┘
+*/
+```
+
 **Use RegexSets to match a string on multiple patterns in linear time**
 
 ```sql

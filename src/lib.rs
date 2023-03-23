@@ -1,3 +1,4 @@
+mod captures;
 mod find_all;
 mod meta;
 mod regex;
@@ -12,7 +13,10 @@ use sqlite_loadable::{
     define_scalar_function, define_table_function, errors::Result, FunctionFlags,
 };
 
-use crate::{find_all::RegexFindAllTable, meta::*, regex::*, regexset::*, split::RegexSplitTable};
+use crate::{
+    captures::RegexCapturesTable, find_all::RegexFindAllTable, meta::*, regex::*, regexset::*,
+    split::RegexSplitTable,
+};
 
 #[sqlite_entrypoint]
 pub fn sqlite3_regex_init(db: *mut sqlite3) -> Result<()> {
@@ -34,8 +38,12 @@ pub fn sqlite3_regex_init(db: *mut sqlite3) -> Result<()> {
     define_scalar_function(db, "regex_replace", 3, regex_replace, flags)?;
     define_scalar_function(db, "regex_replace_all", 3, regex_replace_all, flags)?;
 
+    define_scalar_function(db, "regex_capture", 3, regex_capture, flags)?;
+    define_scalar_function(db, "regex_capture", 2, regex_capture2, flags)?;
+
     define_table_function::<RegexFindAllTable>(db, "regex_find_all", None)?;
     define_table_function::<RegexSplitTable>(db, "regex_split", None)?;
+    define_table_function::<RegexCapturesTable>(db, "regex_captures", None)?;
 
     define_scalar_function(db, "regexset", -1, regexset, flags)?;
     define_scalar_function(db, "regexset_print", 1, regexset_print, flags)?;

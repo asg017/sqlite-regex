@@ -33,6 +33,8 @@ def execute_all(sql, args=None):
 
 FUNCTIONS = [
   "regex",
+  "regex_capture",
+  "regex_capture",
   "regex_debug",
   "regex_find",
   "regex_find_at",
@@ -48,6 +50,7 @@ FUNCTIONS = [
 ]
 
 MODULES = [
+  "regex_captures",
   "regex_find_all",
   "regex_split",
   "regexset_matches",
@@ -148,6 +151,47 @@ class TestRegex(unittest.TestCase):
     with self.assertRaisesRegex(sqlite3.OperationalError, "pattern not valid regex"):
       regex_find_at("[invalidregex", "abc", 0)
     
+  def test_regex_capture(self):
+    regex_capture = lambda pattern, content, group: db.execute("select regex_capture(?, ?, ?)", [pattern, content, group]).fetchone()[0]
+    MOVIE_PATTERN = "'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)"
+    EXAMPLE1 = "Not my favorite movie: 'Citizen Kane' (1941)."
+    self.assertEqual(
+      regex_capture(MOVIE_PATTERN, EXAMPLE1, 0),
+      "'Citizen Kane' (1941)"
+    )
+    self.assertEqual(
+      regex_capture(MOVIE_PATTERN, EXAMPLE1, 1),
+      "Citizen Kane"
+    )
+    self.assertEqual(
+      regex_capture(MOVIE_PATTERN, EXAMPLE1, 2),
+      "1941"
+    )
+    self.assertEqual(
+      regex_capture(MOVIE_PATTERN, EXAMPLE1, "title"),
+      "Citizen Kane"
+    )
+    self.assertEqual(
+      regex_capture(MOVIE_PATTERN, EXAMPLE1, "year"),
+      "1941"
+    )
+    self.assertEqual(
+      regex_capture(MOVIE_PATTERN, EXAMPLE1, "not exist"),
+      None
+    )
+    self.assertEqual(
+      regex_capture(MOVIE_PATTERN, EXAMPLE1, 3),
+      None
+    )
+    self.assertEqual(
+      regex_capture(MOVIE_PATTERN, EXAMPLE1, 1.1),
+      None
+    )
+    self.assertEqual(
+      regex_capture(MOVIE_PATTERN, EXAMPLE1, None),
+      None
+    )
+
   def test_regex_replace(self):
     regex_replace = lambda pattern, content, replacement: db.execute("select regex_replace(?, ?, ?)", [pattern, content, replacement]).fetchone()[0]
     
@@ -182,6 +226,78 @@ class TestRegex(unittest.TestCase):
     self.assertEqual(
       regex_replace_all('a', 'abc abc', ''),
       'bc bc'
+    )
+
+  def test_regex_captures(self):
+    MOVIE_PATTERN = "'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)"
+    EXAMPLE1 = "'Citizen Kane' (1941), 'The Wizard of Oz' (1939), 'M' (1931)."
+    self.assertEqual(
+      execute_all(
+        "select rowid, * from regex_captures(?, ?)", 
+        [MOVIE_PATTERN, EXAMPLE1]
+      ),
+      [
+        {'rowid': 0, 'captures': None},
+        {'rowid': 1, 'captures': None},
+        {'rowid': 2, 'captures': None},
+      ]
+    )
+    self.assertEqual(
+      execute_all(
+        """select 
+          rowid, 
+          regex_capture(captures, 0) as c0, 
+          regex_capture(captures, 1) as c1, 
+          regex_capture(captures, 2) as c2, 
+          regex_capture(captures, 3) as c3, 
+          regex_capture(captures, 'title') as title, 
+          regex_capture(captures, 'year') as year,
+          regex_capture(captures, 'not_exist') as not_exist
+          from regex_captures(?, ?)
+        """, 
+        [MOVIE_PATTERN, EXAMPLE1]
+      ),
+      [
+        {'rowid': 0, 'c0': '\'Citizen Kane\' (1941)', 'c1': 'Citizen Kane', 'c2': '1941', 'c3': None, 'title': 'Citizen Kane', 'year': '1941', 'not_exist': None, },
+        {'rowid': 1, 'c0': '\'The Wizard of Oz\' (1939)', 'c1': 'The Wizard of Oz', 'c2': '1939', 'c3': None, 'title': 'The Wizard of Oz', 'year': '1939', 'not_exist': None, },
+        {'rowid': 2, 'c0': '\'M\' (1931)', 'c1': 'M', 'c2': '1931', 'c3': None, 'title': 'M', 'year': '1931', 'not_exist': None, },
+      ]
+    )
+
+    execute_all("""
+        create temp table comments as 
+        select 
+          key as rowid,
+          value as comment
+        from json_each(?)
+      """, 
+      ['["\'Citizen Kane\' (1941), \'The Wizard of Oz\' (1939), \'M\' (1931)", "\'Moonlight\' (2016), \'Arrival\' (2016)", "\'Parasite\' (2020), \'Joker\' (2019), and \'Marriage Story\' (2019)."]']
+    )
+    self.assertEqual(
+      execute_all(
+        """
+          select 
+          comments.rowid as comment,
+          captures.rowid as capture_idx,
+          regex_capture(captures, 'title')  as title,
+          regex_capture(captures, 'year')   as year
+        from comments
+        join regex_captures(
+          regex(?),
+          comments.comment
+        )as captures;
+        """, [MOVIE_PATTERN]
+      ),
+      [
+        {'comment': 0, 'capture_idx': 0, 'title': 'Citizen Kane', 'year': '1941'},
+        {'comment': 0, 'capture_idx': 1, 'title': 'The Wizard of Oz', 'year': '1939'},
+        {'comment': 0, 'capture_idx': 2, 'title': 'M', 'year': '1931'},
+        {'comment': 1, 'capture_idx': 0, 'title': 'Moonlight', 'year': '2016'},
+        {'comment': 1, 'capture_idx': 1, 'title': 'Arrival', 'year': '2016'},
+        {'comment': 2, 'capture_idx': 0, 'title': 'Parasite', 'year': '2020'},
+        {'comment': 2, 'capture_idx': 1, 'title': 'Joker', 'year': '2019'},
+        {'comment': 2, 'capture_idx': 2, 'title': 'Marriage Story', 'year': '2019'}
+      ]
     )
 
   def test_regex_find_all(self):

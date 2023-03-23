@@ -103,6 +103,147 @@ from regex_find_all(
 └───────┴───────┴─────┴───────────────┘
 ```
 
+<h3 name="regex_capture"><code>regex_capture(pattern, text, group)</code></h3>
+
+Returns the text of the capture group with the specific `group` index or name, or NULL otherwise. Errors if `pattern` is not legal regex. Based on [`Regex.captures()`](https://docs.rs/regex/latest/regex/struct.Regex.html#method.captures).
+
+If `group` is a number, then the N-th capture group is returned, where `0` refers to the entire match, `1` refers to the first left-most capture group in the match, `2` the second, and so on. If the provided group number "overflows', then NULL is returned.
+
+```sql
+select regex_capture(
+  "'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)",
+  "Not my favorite movie: 'Citizen Kane' (1941).",
+  0
+);
+-- "'Citizen Kane' (1941)"
+
+select regex_capture(
+  "'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)",
+  "Not my favorite movie: 'Citizen Kane' (1941).",
+  1
+);
+-- "Citizen Kane"
+
+
+select regex_capture(
+  "'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)",
+  "Not my favorite movie: 'Citizen Kane' (1941).",
+  2
+);
+-- "1941"
+
+select regex_capture(
+  "'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)",
+  "Not my favorite movie: 'Citizen Kane' (1941).",
+  3
+);
+-- NULL
+```
+
+If group is a string, then the value of the capture group with the same name is returned. If there is no matching capture group with the name, or the group was not captured, then NULL is returned.
+
+```sql
+select regex_capture(
+  "'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)",
+  "Not my favorite movie: 'Citizen Kane' (1941).",
+  'title'
+);
+-- "Citizen Kane"
+
+
+select regex_capture(
+  "'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)",
+  "Not my favorite movie: 'Citizen Kane' (1941).",
+  'year'
+);
+-- "1941"
+
+select regex_capture(
+  "'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)",
+  "Not my favorite movie: 'Citizen Kane' (1941).",
+  'not_exist'
+);
+-- NULL
+```
+
+Note that there is a version of `regex_capture()` that only have two parameters: `captures` and `group`. This can only be used with the [`regex_captures`](#regex_captures) table function, with the special `captures` column like so:
+
+```sql
+select
+  regex_capture(captures, 'title')      as title,
+  regex_capture(captures, 'year')       as year,
+  regex_capture(captures, 'not_exist')  as not_exist
+from regex_captures(
+  regex("'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)"),
+  "'Citizen Kane' (1941), 'The Wizard of Oz' (1939), 'M' (1931)."
+);
+/*
+┌──────────────────┬──────┬───────────┐
+│      title       │ year │ not_exist │
+├──────────────────┼──────┼───────────┤
+│ Citizen Kane     │ 1941 │           │
+│ The Wizard of Oz │ 1939 │           │
+│ M                │ 1931 │           │
+└──────────────────┴──────┴───────────┘
+*/
+```
+
+<h3 name="regex_captures"><code>select * from regex_captures(pattern, text)</code></h3>
+
+Returns all non-overlapping capture groups in the given text. Similar to [`regex_find_all`](#regex_find_all), but allows for extracting capture information. Must use with the [`regex_capture`](#regex_capture) function to extract capture group values. Based on [`Regex.captures_iter()`](https://docs.rs/regex/latest/regex/struct.Regex.html#method.captures_iter).
+
+The returned columns:
+
+- `rowid`: The 0-based index of the match. `0` is the entire match, `1` the first matching capture group, `2` the second, etc.
+- `captures`: A special value that's meant to be passed into [`regex_capture()`](#regex_capture). Will appear NULL through direct access.
+
+For faster results, wrap the pattern with the [`regex()`](#regex) function for caching.
+
+```sql
+select
+  rowid,
+  captures,
+  regex_capture(captures, 0)        as "0",
+  regex_capture(captures, 1)        as "1",
+  regex_capture(captures, 2)        as "2",
+  regex_capture(captures, 3)        as "3"
+from regex_captures(
+  regex("'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)"),
+  "'Citizen Kane' (1941), 'The Wizard of Oz' (1939), 'M' (1931)."
+);
+/*
+┌───────┬──────────┬───────────────────────────┬──────────────────┬──────┬───┐
+│ rowid │ captures │             0             │        1         │  2   │ 3 │
+├───────┼──────────┼───────────────────────────┼──────────────────┼──────┼───┤
+│ 0     │          │ 'Citizen Kane' (1941)     │ Citizen Kane     │ 1941 │   │
+│ 1     │          │ 'The Wizard of Oz' (1939) │ The Wizard of Oz │ 1939 │   │
+│ 2     │          │ 'M' (1931)                │ M                │ 1931 │   │
+└───────┴──────────┴───────────────────────────┴──────────────────┴──────┴───┘
+*/
+```
+
+```sql
+select
+  rowid,
+  captures,
+  regex_capture(captures, 'title')  as title,
+  regex_capture(captures, 'year')  as year,
+  regex_capture(captures, 'blah')  as blah
+from regex_captures(
+  regex("'(?P<title>[^']+)'\s+\((?P<year>\d{4})\)"),
+  "'Citizen Kane' (1941), 'The Wizard of Oz' (1939), 'M' (1931)."
+);
+/*
+┌───────┬──────────┬──────────────────┬──────┬──────┐
+│ rowid │ captures │      title       │ year │ blah │
+├───────┼──────────┼──────────────────┼──────┼──────┤
+│ 0     │          │ Citizen Kane     │ 1941 │      │
+│ 1     │          │ The Wizard of Oz │ 1939 │      │
+│ 2     │          │ M                │ 1931 │      │
+└───────┴──────────┴──────────────────┴──────┴──────┘
+*/
+```
+
 <h3 name="regex_replace"><code>regex_replace(pattern, text, replacement)</code></h3>
 
 Replace the **first** instance of `pattern` inside `text` with the given `replacement` text. Supports the [replacment string syntax](https://docs.rs/regex/latest/regex/struct.Regex.html#replacement-string-syntax). Based on [`Regex.replace()`](https://docs.rs/regex/latest/regex/struct.Regex.html#method.replace)
