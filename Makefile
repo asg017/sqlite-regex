@@ -1,3 +1,4 @@
+VERSION=$(shell cat VERSION)
 
 ifeq ($(shell uname -s),Darwin)
 CONFIG_DARWIN=y
