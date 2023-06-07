@@ -115,6 +115,21 @@ See [`docs.md`](./docs.md) for a full API reference.
 
 ## Installing
 
+| Language       | Install                                                        |                                                                                                                                                                                               |
+| -------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Python         | `pip install sqlite-regex`                                     | [![PyPI](https://img.shields.io/pypi/v/sqlite-regex.svg?color=blue&logo=python&logoColor=white)](https://pypi.org/project/sqlite-regex/)                                                      |
+| Datasette      | `datasette install datasette-sqlite-regex`                     | [![Datasette](https://img.shields.io/pypi/v/datasette-sqlite-regex.svg?color=B6B6D9&label=Datasette+plugin&logoColor=white&logo=python)](https://datasette.io/plugins/datasette-sqlite-regex) |
+| Node.js        | `npm install sqlite-regex`                                     | [![npm](https://img.shields.io/npm/v/sqlite-regex.svg?color=green&logo=nodedotjs&logoColor=white)](https://www.npmjs.com/package/sqlite-regex)                                                |
+| Deno           | [`deno.land/x/sqlite_regex`](https://deno.land/x/sqlite_regex) | [![deno.land/x release](https://img.shields.io/github/v/release/asg017/sqlite-regex?color=fef8d2&include_prereleases&label=deno.land%2Fx&logo=deno)](https://deno.land/x/sqlite_regex)        |
+| Ruby           | `gem install sqlite-regex`                                     | ![Gem](https://img.shields.io/gem/v/sqlite-regex?color=red&logo=rubygems&logoColor=white)                                                                                                     |
+| Github Release |                                                                | ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/asg017/sqlite-regex?color=lightgrey&include_prereleases&label=Github+release&logo=github)                       |
+
+<!--
+| Elixir         | [`hex.pm/packages/sqlite_regex`](https://hex.pm/packages/sqlite_regex) | [![Hex.pm](https://img.shields.io/hexpm/v/sqlite_regex?color=purple&logo=elixir)](https://hex.pm/packages/sqlite_regex)                                                                       |
+| Go             | `go get -u github.com/asg017/sqlite-regex/bindings/go`               | [![Go Reference](https://pkg.go.dev/badge/github.com/asg017/sqlite-regex/bindings/go.svg)](https://pkg.go.dev/github.com/asg017/sqlite-regex/bindings/go)                                     |
+| Rust           | `cargo add sqlite-regex`                                             | [![Crates.io](https://img.shields.io/crates/v/sqlite-regex?logo=rust)](https://crates.io/crates/sqlite-regex)                                                                                 |
+-->
+
 The [Releases page](https://github.com/asg017/sqlite-regex/releases) contains pre-built binaries for Linux x86_64, MacOS, and Windows.
 
 ### As a loadable extension
@@ -161,7 +176,7 @@ datasette data.db --load-extension ./regex0
 
 ## Supporting
 
-I (Alex 👋🏼) spent a lot of time and energy on this project and [many other open source projects](https://github.com/asg017?tab=repositories&q=&type=&language=&sort=stargazers). If your company or organization uses this library (or you're feeling generous), then please [consider supporting my work](https://alexgarcia.xyz/work.html), or share this project with a friend!
+I (Alex 👋🏼) spent a lot of time and energy on this project and [many other open source projects](https://github.com/asg017?tab=repositories&q=&type=&language=&sort=stargazers). If your company or organization uses this library (or you're feeling generous), then please [consider supporting my work](https://alexgarcia.regex/work.html), or share this project with a friend!
 
 ## See also
 
