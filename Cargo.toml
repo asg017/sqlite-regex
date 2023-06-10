@@ -2,6 +2,12 @@
 name = "sqlite-regex"
 version = "0.2.3-alpha.8"
 edition = "2021"
+authors = ["Alex Garcia <alexsebastian.garcia@gmail.com>"]
+description = "A SQLite extension for working with regular expressions"
+homepage = "https://github.com/asg017/sqlite-regex"
+repository = "https://github.com/asg017/sqlite-regex"
+keywords = ["sqlite", "sqlite-extension"]
+license = "MIT/Apache-2.0"
 
 [dependencies]
 sqlite-loadable = "0.0.5"
