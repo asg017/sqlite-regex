@@ -4,7 +4,6 @@ version = "0.2.3-alpha.7"
 edition = "2021"
 
 [dependencies]
-#sqlite-loadable = {path="../sqlite-loadable-rs"}
 sqlite-loadable = "0.0.5"
 regex = "1"
 
