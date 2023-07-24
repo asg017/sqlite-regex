@@ -1,6 +1,6 @@
 [project]
 name = "sqlite-utils-sqlite-regex"
-version = "0.2.3-alpha.11"
+version = "0.2.3-alpha.12"
 description = "TODO"
 readme = "README.md"
 authors = [{name = "Alex Garcia"}]
