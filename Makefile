@@ -103,7 +103,7 @@ sqlite-utils: $(TARGET_WHEELS) bindings/sqlite-utils/pyproject.toml bindings/sql
 	python3 -m build bindings/sqlite-utils -w -o $(TARGET_WHEELS)
 
 sqlite-utils-release: $(TARGET_WHEELS) bindings/sqlite-utils/pyproject.toml bindings/sqlite-utils/sqlite_utils_sqlite_regex/version.py
-	python3 -m build bindings/sqlite-utils -w -o $(TARGET_WHEELS)
+	python3 -m build bindings/sqlite-utils -w -o $(TARGET_WHEELS_RELEASE)
 
 npm: VERSION npm/platform-package.README.md.tmpl npm/platform-package.package.json.tmpl npm/sqlite-regex/package.json.tmpl scripts/npm_generate_platform_packages.sh
 	scripts/npm_generate_platform_packages.sh

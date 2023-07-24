@@ -177,7 +177,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: sqlite-regex-datasette-sqlite-utils-wheels
-          path: dist/wheels/*.whl
+          path: dist/release/wheels/*.whl
   upload-crate:
     runs-on: ubuntu-latest
     steps:
