@@ -1,0 +1,21 @@
+[project]
+name = "sqlite-utils-sqlite-hello"
+version = "0.1.0-alpha.61"
+description = "TODO"
+readme = "README.md"
+authors = [{name = "Alex Garcia"}]
+license = {text = "Apache-2.0"}
+classifiers = []
+
+dependencies = [
+    "sqlite-utils",
+    "sqlite-hello"
+]
+
+[project.urls]
+Homepage = "https://github.com/asg017/sqlite-hello"
+Changelog = "https://github.com/asg017/sqlite-hello/releases"
+Issues = "https://github.com/asg017/sqlite-hello/issues"
+
+[project.entry-points.sqlite_utils]
+sqlite_hello = "sqlite_utils_sqlite_hello"
