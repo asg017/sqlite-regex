@@ -1,6 +1,6 @@
 {
   "name": "sqlite-regex",
-  "version": "0.2.3-alpha.9",
+  "version": "0.2.3-alpha.10",
   "github": "https://github.com/asg017/sqlite-regex",
   "tasks": {
     "test": "deno test --unstable -A test.ts"
