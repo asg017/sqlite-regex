@@ -95,6 +95,10 @@ datasette-release: $(TARGET_WHEELS_RELEASE) python/datasette_sqlite_regex/setup.
 	rm $(TARGET_WHEELS_RELEASE)/datasette* || true
 	pip3 wheel python/datasette_sqlite_regex/ --no-deps -w $(TARGET_WHEELS_RELEASE)
 
+bindings/sqlite-utils/pyproject.toml: bindings/sqlite-utils/pyproject.toml.tmpl VERSION
+	VERSION=$(VERSION) envsubst < $< > $@
+	echo "✅ generated $@"
+
 bindings/sqlite-utils/sqlite_utils_sqlite_regex/version.py: bindings/sqlite-utils/sqlite_utils_sqlite_regex/version.py.tmpl VERSION
 	VERSION=$(VERSION) envsubst < $< > $@
 	echo "✅ generated $@"

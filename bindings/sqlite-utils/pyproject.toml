@@ -1,6 +1,6 @@
 [project]
-name = "sqlite-utils-sqlite-hello"
-version = "0.1.0-alpha.61"
+name = "sqlite-utils-sqlite-regex"
+version = "0.2.3-alpha.11"
 description = "TODO"
 readme = "README.md"
 authors = [{name = "Alex Garcia"}]
@@ -9,13 +9,13 @@ classifiers = []
 
 dependencies = [
     "sqlite-utils",
-    "sqlite-hello"
+    "sqlite-regex"
 ]
 
 [project.urls]
-Homepage = "https://github.com/asg017/sqlite-hello"
-Changelog = "https://github.com/asg017/sqlite-hello/releases"
-Issues = "https://github.com/asg017/sqlite-hello/issues"
+Homepage = "https://github.com/asg017/sqlite-regex"
+Changelog = "https://github.com/asg017/sqlite-regex/releases"
+Issues = "https://github.com/asg017/sqlite-regex/issues"
 
 [project.entry-points.sqlite_utils]
-sqlite_hello = "sqlite_utils_sqlite_hello"
+sqlite_regex = "sqlite_utils_sqlite_regex"
