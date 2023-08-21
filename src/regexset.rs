@@ -19,8 +19,8 @@ pub fn regexset(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) ->
 /// regexset_print(regexset)
 pub fn regexset_print(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
     let regexset = value_regexset(values.get(0).ok_or_else(|| Error::new_message(""))?)?;
+    let regexset = unsafe { &*regexset };
     api::result_json(context, regexset.patterns().into())?;
-    Box::into_raw(regexset);
     Ok(())
 }
 
@@ -30,8 +30,8 @@ pub fn regexset_is_match(
     values: &[*mut sqlite3_value],
 ) -> Result<()> {
     let regexset = value_regexset(values.get(0).ok_or_else(|| Error::new_message(""))?)?;
+    let regexset = unsafe { &*regexset };
     let text = api::value_text_notnull(values.get(1).ok_or_else(|| Error::new_message(""))?)?;
     api::result_bool(context, regexset.is_match(text));
-    Box::into_raw(regexset);
     Ok(())
 }

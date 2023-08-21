@@ -10,8 +10,8 @@ use sqlite_loadable::{api, Error, Result};
 // regex(pattern [, flags])
 pub fn regex_print(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
     let regex = value_regex(values.get(0).ok_or("asdf")?)?;
+    let regex = unsafe { &mut *regex };
     api::result_text(context, regex.as_str())?;
-    Box::into_raw(regex);
     Ok(())
 }
 
@@ -28,10 +28,11 @@ pub fn regex(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Re
 /// regex_matches(regex, text)
 pub fn regex_matches(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
     let (regex, input_type) = regex_from_value_or_cache(context, values, 0)?;
+    let regex = unsafe { &mut *regex };
     let content =
         api::value_text_notnull(values.get(1).ok_or("expected 2nd argument as contents")?)?;
 
-    api::result_bool(context, regex.as_ref().is_match(content));
+    api::result_bool(context, regex.is_match(content));
     cleanup_regex_value_cached(context, regex, input_type);
     Ok(())
 }
@@ -56,13 +57,13 @@ pub fn regex_valid(context: *mut sqlite3_context, values: &[*mut sqlite3_value])
 /// regex_find(regex, contents)
 pub fn regex_find(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
     let (regex, input_type) = regex_from_value_or_cache(context, values, 0)?;
-
+    let regex = unsafe { &mut *regex };
     let arg_content = values
         .get(1)
         .ok_or_else(|| Error::new_message("expected 2nd argument as contents"))?;
 
     let content = api::value_text_notnull(arg_content)?;
-    match regex.as_ref().find(content) {
+    match regex.find(content) {
         Some(m) => {
             api::result_text(context, m.as_str())?;
         }
@@ -78,7 +79,7 @@ pub fn regex_find(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) 
 /// regex_find_at(regex, contents, offset)
 pub fn regex_find_at(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
     let (regex, input_type) = regex_from_value_or_cache(context, values, 0)?;
-
+    let regex = unsafe { &mut *regex };
     let arg_content = values
         .get(1)
         .ok_or_else(|| Error::new_message("expected 2nd argument as contents"))?;
@@ -88,7 +89,7 @@ pub fn regex_find_at(context: *mut sqlite3_context, values: &[*mut sqlite3_value
 
     let content = api::value_text_notnull(arg_content)?;
     let offset = api::value_int(arg_offset) as usize;
-    match regex.as_ref().find_at(content, offset) {
+    match regex.find_at(content, offset) {
         Some(m) => {
             api::result_text(context, m.as_str())?;
         }
@@ -105,7 +106,7 @@ pub fn regex_find_at(context: *mut sqlite3_context, values: &[*mut sqlite3_value
 /// regex_replace(regex, contents, replacement)
 pub fn regex_replace(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
     let (regex, input_type) = regex_from_value_or_cache(context, values, 0)?;
-
+    let regex = unsafe { &mut *regex };
     let content = api::value_text_notnull(
         values
             .get(1)
@@ -117,9 +118,9 @@ pub fn regex_replace(context: *mut sqlite3_context, values: &[*mut sqlite3_value
             .ok_or_else(|| Error::new_message("expected 3rd argument as replacement"))?,
     )?;
 
-    let result = regex.as_ref().replace(content, replacement);
+    let result = regex.replace(content, replacement);
 
-    api::result_text(context, &result)?;
+    api::result_text(context, result)?;
     cleanup_regex_value_cached(context, regex, input_type);
 
     Ok(())
@@ -131,7 +132,7 @@ pub fn regex_replace_all(
     values: &[*mut sqlite3_value],
 ) -> Result<()> {
     let (regex, input_type) = regex_from_value_or_cache(context, values, 0)?;
-
+    let regex = unsafe { &mut *regex };
     let content = api::value_text_notnull(
         values
             .get(1)
@@ -142,8 +143,8 @@ pub fn regex_replace_all(
             .get(2)
             .ok_or_else(|| Error::new_message("expected 3rd argument as replacement"))?,
     )?;
-    let result = regex.as_ref().replace_all(content, replacement);
-    api::result_text(context, &result)?;
+    let result = regex.replace_all(content, replacement);
+    api::result_text(context, result)?;
 
     cleanup_regex_value_cached(context, regex, input_type);
     Ok(())
@@ -152,7 +153,7 @@ pub fn regex_replace_all(
 /// regex_capture(regex, contents, group)
 pub fn regex_capture(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
     let (regex, input_type) = regex_from_value_or_cache(context, values, 0)?;
-
+    let regex = unsafe { &mut *regex };
     let content = api::value_text_notnull(
         values
             .get(1)
@@ -162,7 +163,7 @@ pub fn regex_capture(context: *mut sqlite3_context, values: &[*mut sqlite3_value
         .get(2)
         .ok_or_else(|| Error::new_message("expected 3rd argument as group index or name"))?;
 
-    let result = regex.as_ref().captures(content);
+    let result = regex.captures(content);
     match result {
         None => api::result_null(context),
         Some(captures) => {
@@ -185,13 +186,14 @@ pub fn regex_capture(context: *mut sqlite3_context, values: &[*mut sqlite3_value
     Ok(())
 }
 
-/// regex_capture(regex, contents, group)
+/// regex_capture(captures, group)
 pub fn regex_capture2(context: *mut sqlite3_context, values: &[*mut sqlite3_value]) -> Result<()> {
     let captures = value_regex_captures(
         values
             .get(0)
             .ok_or_else(|| Error::new_message("expected 1st argument as capture group"))?,
     )?;
+    let captures = unsafe { &*captures };
     let group_arg = values
         .get(1)
         .ok_or_else(|| Error::new_message("expected 3rd argument as group index or name"))?;
@@ -225,6 +227,5 @@ pub fn regex_capture2(context: *mut sqlite3_context, values: &[*mut sqlite3_valu
             None => api::result_null(context),
         },
     }
-    Box::into_raw(captures);
     Ok(())
 }

@@ -6,16 +6,18 @@ use sqlite_loadable::{api, Error, Result};
 // Raw bytes as performance. the string MUST end in the null byte '\0'
 const REGEX_POINTER_NAME: &[u8] = b"regex0\0";
 
-pub fn value_regex(value: &*mut sqlite3_value) -> Result<Box<Regex>> {
+pub fn value_regex(value: &*mut sqlite3_value) -> Result<*mut Regex> {
     unsafe {
         if let Some(regex) = api::value_pointer(value, REGEX_POINTER_NAME) {
             return Ok(regex);
         }
     }
     let pattern = api::value_text_notnull(value)?;
-    Ok(Box::new(Regex::new(pattern).map_err(|err| {
-        Error::new_message(format!("Error parsing regex: {}", err).as_str())
-    })?))
+    let x = Box::new(
+        Regex::new(pattern)
+            .map_err(|err| Error::new_message(format!("Error parsing regex: {}", err).as_str()))?,
+    );
+    Ok(Box::into_raw(x))
 }
 
 pub fn result_regex(context: *mut sqlite3_context, regex: Regex) {
@@ -33,7 +35,7 @@ pub(crate) struct CaptureGroup {
 }
 const REGEX_CAPTURES_NAME: &[u8] = b"regex_captures0\0";
 
-pub(crate) fn value_regex_captures(value: &*mut sqlite3_value) -> Result<Box<Vec<CaptureGroup>>> {
+pub(crate) fn value_regex_captures(value: &*mut sqlite3_value) -> Result<*mut Vec<CaptureGroup>> {
     unsafe {
         if let Some(capture) = api::value_pointer(value, REGEX_CAPTURES_NAME) {
             return Ok(capture);
@@ -68,7 +70,7 @@ pub fn regex_from_value_or_cache(
     context: *mut sqlite3_context,
     values: &[*mut sqlite3_value],
     at: usize,
-) -> Result<(Box<Regex>, RegexInputType)> {
+) -> Result<(*mut Regex, RegexInputType)> {
     let value = values
         .get(at)
         .ok_or_else(|| Error::new_message("expected 1st argument as pattern"))?;
@@ -86,21 +88,16 @@ pub fn regex_from_value_or_cache(
 
     let auxdata = api::auxdata_get(context, at as i32);
     if !auxdata.is_null() {
-        Ok((
-            unsafe { Box::from_raw(auxdata.cast::<Regex>()) },
-            RegexInputType::GetAuxdata,
-        ))
+        Ok((auxdata.cast::<Regex>(), RegexInputType::GetAuxdata))
     } else {
         // Step 3: if a string is passed in, then try to make
         // a regex from that, and return a flag to call sqlite3_set_auxdata
 
         let pattern = api::value_text_notnull(value)?;
-        Ok((
-            Box::new(
-                Regex::new(pattern).map_err(|_| Error::new_message("pattern not valid regex"))?,
-            ),
-            RegexInputType::TextInitial(at),
-        ))
+        let boxed = Box::new(
+            Regex::new(pattern).map_err(|_| Error::new_message("pattern not valid regex"))?,
+        );
+        Ok((Box::into_raw(boxed), RegexInputType::TextInitial(at)))
     }
 }
 
@@ -109,10 +106,9 @@ unsafe extern "C" fn cleanup(_arg1: *mut c_void) {}
 
 pub fn cleanup_regex_value_cached(
     context: *mut sqlite3_context,
-    regex: Box<Regex>,
+    regex: *mut Regex,
     input_type: RegexInputType,
 ) {
-    let pointer = Box::into_raw(regex);
     match input_type {
         RegexInputType::Pointer => (),
         RegexInputType::GetAuxdata => {}
@@ -120,7 +116,7 @@ pub fn cleanup_regex_value_cached(
             api::auxdata_set(
                 context,
                 at as i32,
-                pointer.cast::<c_void>(),
+                regex.cast::<c_void>(),
                 // TODO memory leak, box not destroyed?
                 Some(cleanup),
             )
@@ -131,7 +127,7 @@ pub fn cleanup_regex_value_cached(
 // Raw bytes as performance. the string MUST end in the null byte '\0'
 const REGEX_SET_POINTER_NAME: &[u8] = b"regexset0\0";
 
-pub fn value_regexset(value: &*mut sqlite3_value) -> Result<Box<RegexSet>> {
+pub fn value_regexset(value: &*mut sqlite3_value) -> Result<*mut RegexSet> {
     unsafe {
         if let Some(regex) = api::value_pointer(value, REGEX_SET_POINTER_NAME) {
             return Ok(regex);

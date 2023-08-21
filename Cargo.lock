@@ -254,9 +254,9 @@ checksum = "19b17cddbe7ec3f8bc800887bab5e717348c95ea2ca0b1bf0837fb964dc67099"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.46"
+version = "1.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94e2ef8dbfc347b10c094890f778ee2e36ca9bb4262e86dc99cd217e35f3470b"
+checksum = "18fb31db3f9bddb2ea821cde30a9f70117e3f119938b5ee630b7403aa6e2ead9"
 dependencies = [
  "unicode-ident",
 ]
@@ -338,9 +338,9 @@ checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
 name = "sqlite-loadable"
-version = "0.0.5"
+version = "0.0.6-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a916b7bb8738eef189dea88731b619b80bf3f62b3acf05138fa43fbf8621cc94"
+checksum = "07949823c35f9e5cf978768084a74298d4c9bc8610fa116401d1d3ee4affac6e"
 dependencies = [
  "bitflags",
  "serde",
@@ -351,9 +351,9 @@ dependencies = [
 
 [[package]]
 name = "sqlite-loadable-macros"
-version = "0.0.2"
+version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f98bc75a8d6fd24f6a2cfea34f28758780fa17279d3051eec926efa381971e48"
+checksum = "96037a396115a2675db783f700faad878b44c8ff56c8a29c3404649a517a5e8f"
 dependencies = [
  "proc-macro2",
  "quote",

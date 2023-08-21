@@ -123,6 +123,7 @@ impl VTabCursor for RegexSplitCursor<'_> {
                 .get(0)
                 .ok_or_else(|| Error::new_message("expected 1st argument as regex"))?,
         )?;
+        let r = unsafe { &*r };
         let contents = api::value_text_notnull(
             values
                 .get(1)
@@ -131,7 +132,6 @@ impl VTabCursor for RegexSplitCursor<'_> {
 
         let split = r.split(contents);
         self.split = Some(split.map(|i| i.to_string()).collect());
-        Box::into_raw(r);
         self.rowid = 0;
         self.contents = Some(contents.to_owned());
         Ok(())

@@ -10,7 +10,8 @@ mod utils;
 use regexset_matches::RegexSetMatchesTable;
 use sqlite_loadable::prelude::*;
 use sqlite_loadable::{
-    define_scalar_function, define_table_function, errors::Result, FunctionFlags,
+    define_scalar_function, define_table_function, errors::Result,
+    table::define_table_function_with_find, FunctionFlags,
 };
 
 use crate::{
@@ -43,7 +44,7 @@ pub fn sqlite3_regex_init(db: *mut sqlite3) -> Result<()> {
 
     define_table_function::<RegexFindAllTable>(db, "regex_find_all", None)?;
     define_table_function::<RegexSplitTable>(db, "regex_split", None)?;
-    define_table_function::<RegexCapturesTable>(db, "regex_captures", None)?;
+    define_table_function_with_find::<RegexCapturesTable>(db, "regex_captures", None)?;
 
     define_scalar_function(db, "regexset", -1, regexset, flags)?;
     define_scalar_function(db, "regexset_print", 1, regexset_print, flags)?;

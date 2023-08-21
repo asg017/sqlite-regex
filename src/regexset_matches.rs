@@ -123,13 +123,14 @@ impl VTabCursor for RegexSetMatchesCursor {
         let r = value_regexset(values.get(0).ok_or_else(|| {
             Error::new_message("internal error: pattern not passed into xFilter")
         })?)?;
+        let r = unsafe { &mut *r };
         let contents = api::value_text_notnull(values.get(1).ok_or_else(|| {
             Error::new_message("internal error: contents not passed into xFilter")
         })?)?;
-        self.regex_set = Some((*r).clone());
+
+        self.regex_set = Some(r.clone());
         self.matches = Some(r.matches(contents).into_iter().collect());
         self.rowid = 0;
-        Box::into_raw(r);
         Ok(())
     }
 

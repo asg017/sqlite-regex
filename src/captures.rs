@@ -1,7 +1,8 @@
 use regex::{Captures, Regex};
 use sqlite_loadable::{
     api,
-    table::{ConstraintOperator, IndexInfo, VTab, VTabArguments, VTabCursor},
+    scalar::scalar_function_raw,
+    table::{ConstraintOperator, IndexInfo, VTab, VTabArguments, VTabCursor, VTabFind},
     BestIndexError, Result,
 };
 use sqlite_loadable::{prelude::*, Error};
@@ -90,6 +91,19 @@ impl<'vtab> VTab<'vtab> for RegexCapturesTable {
     }
 }
 
+impl<'vtab> VTabFind<'vtab> for RegexCapturesTable {
+    fn find_function(
+        &mut self,
+        argc: i32,
+        name: &str,
+    ) -> Option<unsafe extern "C" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)> {
+        if name == "->>" && argc == 2 {
+            return Some(scalar_function_raw(crate::regex_capture2));
+        }
+        None
+    }
+}
+
 #[repr(C)]
 pub struct RegexCapturesCursor<'vtab> {
     /// Base class. Must be first
@@ -122,6 +136,7 @@ impl VTabCursor for RegexCapturesCursor<'_> {
                 .get(0)
                 .ok_or_else(|| Error::new_message("expected 1st argument as regex"))?,
         )?;
+        let r = unsafe { &*r };
         let contents = api::value_text_notnull(
             values
                 .get(1)
@@ -132,8 +147,7 @@ impl VTabCursor for RegexCapturesCursor<'_> {
         for captures in r.captures_iter(contents) {
             res.push(captures)
         }
-        self.r_clone = Some((*r).clone());
-        Box::into_raw(r);
+        self.r_clone = Some((r).clone());
         self.all_captures = Some(res);
         self.curr = 0;
         Ok(())

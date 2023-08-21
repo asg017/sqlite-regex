@@ -127,6 +127,7 @@ impl VTabCursor for RegexFindAllCursor<'_> {
                 .get(0)
                 .ok_or_else(|| Error::new_message("expected 1st argument as regex"))?,
         )?;
+        let r = unsafe { &*r };
         let contents = api::value_text_notnull(
             values
                 .get(1)
@@ -137,7 +138,6 @@ impl VTabCursor for RegexFindAllCursor<'_> {
         for m in r.find_iter(contents) {
             res.push((m.start(), m.end(), m.as_str().to_string()))
         }
-        Box::into_raw(r);
         self.matches = Some(res);
         self.curr = 0;
         Ok(())
