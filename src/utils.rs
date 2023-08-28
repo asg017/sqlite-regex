@@ -1,7 +1,7 @@
 use regex::{Captures, Regex, RegexSet};
-
 use sqlite_loadable::prelude::*;
 use sqlite_loadable::{api, Error, Result};
+use std::os::raw::c_void;
 
 // Raw bytes as performance. the string MUST end in the null byte '\0'
 const REGEX_POINTER_NAME: &[u8] = b"regex0\0";
@@ -101,8 +101,9 @@ pub fn regex_from_value_or_cache(
     }
 }
 
-use std::os::raw::c_void;
-unsafe extern "C" fn cleanup(_arg1: *mut c_void) {}
+unsafe extern "C" fn cleanup_regex(arg1: *mut c_void) {
+    drop(Box::from_raw(arg1.cast::<Regex>()))
+}
 
 pub fn cleanup_regex_value_cached(
     context: *mut sqlite3_context,
@@ -112,15 +113,12 @@ pub fn cleanup_regex_value_cached(
     match input_type {
         RegexInputType::Pointer => (),
         RegexInputType::GetAuxdata => {}
-        RegexInputType::TextInitial(at) => {
-            api::auxdata_set(
-                context,
-                at as i32,
-                regex.cast::<c_void>(),
-                // TODO memory leak, box not destroyed?
-                Some(cleanup),
-            )
-        }
+        RegexInputType::TextInitial(at) => api::auxdata_set(
+            context,
+            at as i32,
+            regex.cast::<c_void>(),
+            Some(cleanup_regex),
+        ),
     }
 }
 
