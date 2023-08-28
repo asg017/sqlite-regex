@@ -300,32 +300,33 @@ class TestRegex(unittest.TestCase):
       ]
     )
     # with ->> syntax
-    self.assertEqual(
-      execute_all(
-        """
-          select
-          comments.rowid as comment,
-          captures.rowid as capture_idx,
-          captures ->> 'title'  as title2,
-          captures ->> 'year'   as year2
-        from comments
-        join regex_captures(
-          regex(?),
-          comments.comment
-        )as captures;
-        """, [MOVIE_PATTERN]
-      ),
-      [
-        {'comment': 0, 'capture_idx': 0, 'title2': 'Citizen Kane', 'year2': '1941'},
-        {'comment': 0, 'capture_idx': 1, 'title2': 'The Wizard of Oz', 'year2': '1939'},
-        {'comment': 0, 'capture_idx': 2, 'title2': 'M', 'year2': '1931'},
-        {'comment': 1, 'capture_idx': 0, 'title2': 'Moonlight', 'year2': '2016'},
-        {'comment': 1, 'capture_idx': 1, 'title2': 'Arrival', 'year2': '2016'},
-        {'comment': 2, 'capture_idx': 0, 'title2': 'Parasite', 'year2': '2020'},
-        {'comment': 2, 'capture_idx': 1, 'title2': 'Joker', 'year2': '2019'},
-        {'comment': 2, 'capture_idx': 2, 'title2': 'Marriage Story', 'year2': '2019'}
-      ]
-    )
+    if sqlite3.sqlite_version_info[1] >= 38:
+      self.assertEqual(
+        execute_all(
+          """
+            select
+            comments.rowid as comment,
+            captures.rowid as capture_idx,
+            captures ->> 'title'  as title2,
+            captures ->> 'year'   as year2
+          from comments
+          join regex_captures(
+            regex(?),
+            comments.comment
+          )as captures;
+          """, [MOVIE_PATTERN]
+        ),
+        [
+          {'comment': 0, 'capture_idx': 0, 'title2': 'Citizen Kane', 'year2': '1941'},
+          {'comment': 0, 'capture_idx': 1, 'title2': 'The Wizard of Oz', 'year2': '1939'},
+          {'comment': 0, 'capture_idx': 2, 'title2': 'M', 'year2': '1931'},
+          {'comment': 1, 'capture_idx': 0, 'title2': 'Moonlight', 'year2': '2016'},
+          {'comment': 1, 'capture_idx': 1, 'title2': 'Arrival', 'year2': '2016'},
+          {'comment': 2, 'capture_idx': 0, 'title2': 'Parasite', 'year2': '2020'},
+          {'comment': 2, 'capture_idx': 1, 'title2': 'Joker', 'year2': '2019'},
+          {'comment': 2, 'capture_idx': 2, 'title2': 'Marriage Story', 'year2': '2019'}
+        ]
+      )
 
   def test_regex_find_all(self):
     regex_find_all = lambda pattern, content: execute_all("select rowid, * from regex_find_all(?, ?)", [pattern, content])
