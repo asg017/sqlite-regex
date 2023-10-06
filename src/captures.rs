@@ -2,12 +2,12 @@ use regex::{Captures, Regex};
 use sqlite_loadable::{
     api,
     scalar::scalar_function_raw,
-    table::{ConstraintOperator, IndexInfo, VTab, VTabArguments, VTabCursor, VTabFind},
+    table::{ConstraintOperator, FindResult, IndexInfo, VTab, VTabArguments, VTabCursor, VTabFind},
     BestIndexError, Result,
 };
 use sqlite_loadable::{prelude::*, Error};
 
-use std::{mem, os::raw::c_int};
+use std::{ffi::c_void, mem, os::raw::c_int};
 
 use crate::utils::{result_regex_captures, value_regex};
 
@@ -92,13 +92,9 @@ impl<'vtab> VTab<'vtab> for RegexCapturesTable {
 }
 
 impl<'vtab> VTabFind<'vtab> for RegexCapturesTable {
-    fn find_function(
-        &mut self,
-        argc: i32,
-        name: &str,
-    ) -> Option<unsafe extern "C" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)> {
+    fn find_function(&mut self, argc: i32, name: &str) -> Option<FindResult> {
         if name == "->>" && argc == 2 {
-            return Some(scalar_function_raw(crate::regex_capture2));
+            return Some((scalar_function_raw(crate::regex_capture2), None, None));
         }
         None
     }

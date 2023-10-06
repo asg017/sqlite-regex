@@ -39,10 +39,14 @@ ifdef target
 CARGO_TARGET=--target=$(target)
 BUILT_LOCATION=target/$(target)/debug/$(LIBRARY_PREFIX)sqlite_regex.$(LOADABLE_EXTENSION)
 BUILT_LOCATION_RELEASE=target/$(target)/release/$(LIBRARY_PREFIX)sqlite_regex.$(LOADABLE_EXTENSION)
+BUILT_LOCATION_STATIC=target/$(target)/debug/libsqlite_regex.$(STATIC_EXTENSION)
+BUILT_LOCATION_STATIC_RELEASE=target/$(target)/release/libsqlite_regex.$(STATIC_EXTENSION)
 else
 CARGO_TARGET=
 BUILT_LOCATION=target/debug/$(LIBRARY_PREFIX)sqlite_regex.$(LOADABLE_EXTENSION)
 BUILT_LOCATION_RELEASE=target/release/$(LIBRARY_PREFIX)sqlite_regex.$(LOADABLE_EXTENSION)
+BUILT_LOCATION_STATIC=target/debug/libsqlite_regex.$(STATIC_EXTENSION)
+BUILT_LOCATION_STATIC_RELEASE=target/release/libsqlite_regex.$(STATIC_EXTENSION)
 endif
 
 ifdef python
@@ -73,6 +77,14 @@ $(TARGET_LOADABLE): $(prefix) $(shell find . -type f -name '*.rs')
 
 $(TARGET_LOADABLE_RELEASE): $(prefix) $(shell find . -type f -name '*.rs')
 	cargo build --release $(CARGO_TARGET)
+	cp $(BUILT_LOCATION_RELEASE) $@
+
+$(TARGET_STATIC): $(prefix) $(shell find . -type f -name '*.rs')
+	cargo build $(CARGO_TARGET) --features=sqlite-loadable/static
+	cp $(BUILT_LOCATION) $@
+
+$(TARGET_STATIC_RELEASE): $(prefix) $(shell find . -type f -name '*.rs')
+	cargo build --release $(CARGO_TARGET) --features=sqlite-loadable/static
 	cp $(BUILT_LOCATION_RELEASE) $@
 
 python: $(TARGET_WHEELS) $(TARGET_LOADABLE) python/sqlite_regex/setup.py python/sqlite_regex/sqlite_regex/__init__.py .github/workflows/rename-wheels.py

@@ -10,7 +10,7 @@ keywords = ["sqlite", "sqlite-extension"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-sqlite-loadable = "0.0.6-alpha.2"
+sqlite-loadable = "0.0.6-alpha.6"
 regex = "1"
 
 [lib]
