@@ -1,13 +1,12 @@
 {
    "owner": "asg017",
-   "name": "sqlite-regex",
+   "name": "regex",
    "version": "v0.2.3",
    "repository": "https://github.com/asg017/sqlite-regex",
    "authors": ["Alex Garcia"],
    "license": "MIT",
    "description": "A fast regular expression SQLite extension, written in Rust.",
-   "keywords": ["sqlite-regex"],
-   "symbols": ["regexp"],
+   "keywords": ["sqlite","regex"],
    "assets": {
       "files": {
          "darwin-amd64": "sqlite-regex-{version}-loadable-macos-x86_64.tar.gz",
