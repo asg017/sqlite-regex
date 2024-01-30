@@ -1,18 +1,37 @@
 {
-   "owner": "asg017",
-   "name": "regex",
-   "version": "v0.2.3",
-   "repository": "https://github.com/asg017/sqlite-regex",
-   "authors": ["Alex Garcia"],
-   "license": "MIT",
-   "description": "A fast regular expression SQLite extension, written in Rust.",
-   "keywords": ["sqlite","regex"],
-   "assets": {
-      "files": {
-         "darwin-amd64": "sqlite-regex-{version}-loadable-macos-x86_64.tar.gz",
-         "darwin-arm64": "sqlite-regex-{version}-loadable-macos-aarch64.tar.gz",
-         "linux-amd64": "sqlite-regex-{version}-loadable-linux-x86_64.tar.gz",
-         "windows-amd64": "sqlite-regex-{version}-loadable-windows-x86_64.tar.gz"
-      }
-   }
+    "owner": "asg017",
+    "name": "regex",
+    "version": "v0.2.3",
+    "repository": "https://github.com/asg017/sqlite-regex",
+    "authors": ["Alex Garcia"],
+    "license": "MIT",
+    "description": "Fast and performant regular expressions.",
+    "keywords": ["sqlite-regex"],
+    "symbols": [
+        "regex_capture",
+        "regex_captures",
+        "regex_debug",
+        "regex_find_all",
+        "regex_find",
+        "regex_print",
+        "regex_replace_all",
+        "regex_replace",
+        "regex_split",
+        "regex_valid",
+        "regex_version",
+        "regex",
+        "regexp",
+        "regexset_is_match",
+        "regexset_matches",
+        "regexset_print",
+        "regexset"
+    ],
+    "assets": {
+        "files": {
+            "darwin-amd64": "sqlite-regex-{version}-loadable-macos-x86_64.tar.gz",
+            "darwin-arm64": "sqlite-regex-{version}-loadable-macos-aarch64.tar.gz",
+            "linux-amd64": "sqlite-regex-{version}-loadable-linux-x86_64.tar.gz",
+            "windows-amd64": "sqlite-regex-{version}-loadable-windows-x86_64.zip"
+        }
+    }
 }
