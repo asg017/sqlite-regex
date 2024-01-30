@@ -124,6 +124,7 @@ See [`docs.md`](./docs.md) for a full API reference.
 | Ruby           | `gem install sqlite-regex`                                     | ![Gem](https://img.shields.io/gem/v/sqlite-regex?color=red&logo=rubygems&logoColor=white)                                                                                                     |
 | Github Release |                                                                | ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/asg017/sqlite-regex?color=lightgrey&include_prereleases&label=Github+release&logo=github)                       |
 | Rust           | `cargo add sqlite-regex`                                       | [![Crates.io](https://img.shields.io/crates/v/sqlite-regex?logo=rust)](https://crates.io/crates/sqlite-regex)                                                                                 |
+| Sqlite         | `sqlpkg install asg017/regex`                                  | [![sqlpkg CLI](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fasg017%2Fsqlite-regex%2Freleases%2Flatest&query=name&logo=sqlite&label=sqlpkg%20CLI&color=85cff3)](https://sqlpkg.org/) |
 
 <!--
 | Elixir         | [`hex.pm/packages/sqlite_regex`](https://hex.pm/packages/sqlite_regex) | [![Hex.pm](https://img.shields.io/hexpm/v/sqlite_regex?color=purple&logo=elixir)](https://hex.pm/packages/sqlite_regex)                                                                       |
