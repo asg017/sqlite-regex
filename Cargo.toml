@@ -13,5 +13,10 @@ license = "MIT/Apache-2.0"
 sqlite-loadable = "0.0.6-alpha.6"
 regex = "1"
 
+[features]
+default = ["dynamic"]
+dynamic = ["sqlite-loadable/dynamic"]
+static = ["sqlite-loadable/static"]
+
 [lib]
 crate-type=["lib", "cdylib", "staticlib"]
