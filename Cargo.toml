@@ -10,8 +10,13 @@ keywords = ["sqlite", "sqlite-extension"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-sqlite-loadable = "0.0.6-alpha.6"
+sqlite-loadable = {version = "0.0.6-alpha.6", default-features = false}
 regex = "1"
+
+[features]
+default = ["dynamic"]
+dynamic = ["sqlite-loadable/dynamic"]
+static = ["sqlite-loadable/static"]
 
 [lib]
 crate-type=["lib", "cdylib", "staticlib"]
